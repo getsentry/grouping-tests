@@ -41,7 +41,7 @@ def store_events(output_dir: Path):
 
         if node is not None:
             output_path = output_dir / f"project_{project_id}" / event_path(event_id)
-            os.makedirs(output_path.parent)
+            os.makedirs(output_path.parent, exist_ok=True)
             with open(output_path, 'w') as output_file:
                 json.dump(node, output_file)
 

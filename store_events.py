@@ -11,10 +11,13 @@ import click
 import sys
 import json
 import textwrap
+import time
 from pathlib import Path
 
 
 LOG = logging.getLogger(__name__)
+
+BATCH_SIZE = 100  # determined empirically
 
 
 @click.command()
@@ -34,18 +37,43 @@ def store_events(output_dir: Path):
 
     LOG.info("Reading event IDs from stdin...")
 
-    for line in sys.stdin:
-        project_id, event_id = line.strip().split("\t")
-        node_id = Event.generate_node_id(project_id, event_id)
-        node = nodestore.get(node_id)
+    t0 = time.time()
 
-        if node is not None:
-            output_path = output_dir / f"project_{project_id}" / event_path(event_id)
-            os.makedirs(output_path.parent, exist_ok=True)
-            with open(output_path, 'w') as output_file:
-                json.dump(node, output_file)
+    for batch in read_batches():
 
-    LOG.info("Done.")
+        id_pairs = (line.strip().split("\t") for line in batch)
+        id_map = {
+            Event.generate_node_id(project_id, event_id): (project_id, event_id)
+            for project_id, event_id in id_pairs
+        }
+        nodes_by_id = nodestore.get_multi(id_map.keys())
+
+        for node_id, node in nodes_by_id.items():
+            project_id, event_id = id_map[node_id]
+            if node is not None:
+                output_path = output_dir / f"project_{project_id}" / event_path(event_id)
+                write_node(node, output_path)
+
+    LOG.info("Done. Seconds ellapsed: %s" % (time.time() - t0))
+
+
+def write_node(node, output_path):
+    os.makedirs(output_path.parent, exist_ok=True)
+    with open(output_path, 'w') as output_file:
+        json.dump(node, output_file)
+
+
+def read_batches():
+    batch = []
+    for i, line in enumerate(sys.stdin):
+        batch.append(line)
+        if i > 0 and (i % BATCH_SIZE) == 0:
+            yield batch
+            batch = []
+
+    if batch:
+        yield batch
+
 
 
 def event_path(event_id: str) -> Path:

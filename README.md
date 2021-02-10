@@ -17,3 +17,15 @@ clickhouse-client --query 'SELECT project_id, event_id FROM sentry_local LIMIT 1
 | python store_events.py --output-dir ./events
 ```
 
+### Create grouping report
+
+Under development.
+The current version builds a tree from the stored event hashes and prints it to stdout, i.e.
+``--config`` and ``--report-dir`` are currently ignored:
+
+```bash
+python create_grouping_report.py \
+    --events-dir ./events \
+    --config ./config.json \
+    --report-dir ./report_$(date)
+```

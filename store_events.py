@@ -10,6 +10,7 @@ import logging
 import click
 import sys
 import json
+import textwrap
 from pathlib import Path
 
 
@@ -18,7 +19,7 @@ LOG = logging.getLogger(__name__)
 
 @click.command()
 @click.option("--output-dir", required=True, type=Path)
-def store_events(output_dir: str):
+def store_events(output_dir: Path):
     """ Store event payloads as JSON files
 
     Usage example:
@@ -38,12 +39,21 @@ def store_events(output_dir: str):
         node_id = Event.generate_node_id(project_id, event_id)
         node = nodestore.get(node_id)
 
-        output_path = output_dir / f"project_{project_id}" / f"event_{event_id}.json"
-        os.makedirs(output_path.parent)
-        with open(output_path, 'w') as output_file:
-            json.dump(node, output_file)
+        if node is not None:
+            output_path = output_dir / f"project_{project_id}" / event_path(event_id)
+            os.makedirs(output_path.parent)
+            with open(output_path, 'w') as output_file:
+                json.dump(node, output_file)
 
     LOG.info("Done.")
+
+
+def event_path(event_id: str) -> Path:
+    """ Return relative event path """
+    id_parts = textwrap.wrap(event_id, 8)
+    target_dir = Path().joinpath(*id_parts)
+
+    return target_dir / f"event_{event_id}.json"
 
 
 if __name__ == "__main__":

@@ -4,8 +4,6 @@ import os
 os.environ["SENTRY_CONF"] = "../getsentry/getsentry/settings.py"
 configure()
 
-from sentry import nodestore
-from sentry.eventstore.models import Event
 import logging
 import click
 import sys
@@ -13,8 +11,11 @@ import json
 import textwrap
 from pathlib import Path
 
+from sentry import nodestore
+from sentry.eventstore.models import Event
 
-LOG = logging.getLogger(__name__)
+import sentry_sdk
+sentry_sdk.init("")
 
 
 @click.command()
@@ -29,10 +30,10 @@ def store_events(output_dir: Path):
     """
 
     if output_dir.exists():
-        LOG.error(f"Output dir {output_dir} already exists")
+        print(f"Output dir {output_dir} already exists", file=sys.stderr)
         sys.exit(1)
 
-    LOG.info("Reading event IDs from stdin...")
+    print("Reading event IDs from stdin...")
 
     for line in sys.stdin:
         project_id, event_id = line.strip().split("\t")
@@ -45,7 +46,8 @@ def store_events(output_dir: Path):
             with open(output_path, 'w') as output_file:
                 json.dump(node, output_file)
 
-    LOG.info("Done.")
+    print("Done.")
+
 
 def event_path(event_id: str, prefix_length=2, num_levels=2) -> Path:
     """ Spread out files by chopping up the event ID """

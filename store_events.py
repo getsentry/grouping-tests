@@ -6,9 +6,11 @@ configure()
 
 import logging
 import click
+from concurrent.futures import ProcessPoolExecutor
 import sys
 import json
 import textwrap
+import time
 from pathlib import Path
 
 from sentry import nodestore
@@ -20,7 +22,8 @@ sentry_sdk.init("")
 
 @click.command()
 @click.option("--output-dir", required=True, type=Path)
-def store_events(output_dir: Path):
+@click.option("--num-workers", default=1)
+def store_events(output_dir: Path, num_workers: int):
     """ Store event payloads as JSON files
 
     Usage example:
@@ -30,23 +33,43 @@ def store_events(output_dir: Path):
     """
 
     if output_dir.exists():
-        print(f"Output dir {output_dir} already exists", file=sys.stderr)
+        print(f"ERROR: Output dir {output_dir} already exists")
         sys.exit(1)
 
+    t0 = time.time()
+
     print("Reading event IDs from stdin...")
+    lines = list(sys.stdin)  # So we have a length for the progress bar
 
-    for line in sys.stdin:
-        project_id, event_id = line.strip().split("\t")
-        node_id = Event.generate_node_id(project_id, event_id)
-        node = nodestore.get(node_id)
+    with ProcessPoolExecutor(max_workers=num_workers) as pool:
+        tasks = pool.map(fetch, lines)
+        progress_bar = click.progressbar(tasks, length=len(lines))
+        progress_bar.hidden = False
 
-        if node is not None:
-            output_path = output_dir / f"project_{project_id}" / event_path(event_id)
-            os.makedirs(output_path.parent, exist_ok=True)
-            with open(output_path, 'w') as output_file:
-                json.dump(node, output_file)
+        with progress_bar as nodes:
+            for project_id, event_id, node in nodes:
+                if node is None:
+                    print(
+                        "WARNING: Got None from nodestore for project / event",
+                        project_id, event_id, file=sys.stderr)
+                else:
+                    store(project_id, event_id, node, output_dir)
 
-    print("Done.")
+    print("Done. Time ellapsed: %s" % (time.time() - t0))
+
+
+def fetch(line):
+    project_id, event_id = line.strip().split("\t")
+    node_id = Event.generate_node_id(project_id, event_id)
+
+    return project_id, event_id, nodestore.get(node_id)
+
+
+def store(project_id, event_id, node, output_dir: Path):
+    output_path = output_dir / f"project_{project_id}" / event_path(event_id)
+    os.makedirs(output_path.parent, exist_ok=True)
+    with open(output_path, 'w') as output_file:
+        json.dump(node, output_file)
 
 
 def event_path(event_id: str, prefix_length=2, num_levels=2) -> Path:

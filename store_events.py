@@ -75,11 +75,10 @@ def read_batches():
         yield batch
 
 
-
-def event_path(event_id: str) -> Path:
-    """ Return relative event path """
-    id_parts = textwrap.wrap(event_id, 8)
-    target_dir = Path().joinpath(*id_parts)
+def event_path(event_id: str, prefix_length=2, num_levels=2) -> Path:
+    """ Spread out files by chopping up the event ID """
+    id_parts = textwrap.wrap(event_id, prefix_length)
+    target_dir = Path().joinpath(*id_parts[:num_levels])
 
     return target_dir / f"event_{event_id}.json"
 

@@ -85,4 +85,4 @@ def print_indented(num_spaces: int, *args, **kwargs):
 
 
 if __name__ == "__main__":
-    create_grouping_report()
+    create_grouping_report()  # pylint: disable=no-value-for-parameter

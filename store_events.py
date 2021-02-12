@@ -85,4 +85,4 @@ def event_path(event_id: str) -> Path:
 
 
 if __name__ == "__main__":
-    store_events()
+    store_events()  # pylint: disable=no-value-for-parameter

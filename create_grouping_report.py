@@ -22,25 +22,26 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path):
         LOG.error(f"Report dir {report_dir} already exists")
         sys.exit(1)
 
-    # Create an issue tree
-    root_node = GroupNode("root")
-
     # TODO: instead of using the stored production hashes, use Event.get_hashes(force_config=...)
     #       to create a new group tree
     for entry in os.scandir(event_dir):
         project_id = entry.name
+
+        # Create an issue tree
+        project = GroupNode(project_id)
+
         for filename in iglob(f"{entry.path}/**/*json", recursive=True):
             with open(filename, 'r') as file_:
                 event = json.load(file_)
             try:
-                node_path = [project_id] + event['hashes']
+                node_path = event['hashes']
             except KeyError:
                 LOG.warn("Event %s has no hashes", event['event_id'])
             else:
                 # Store lightweight version of event, keep payload in filesystem
-                root_node.insert(node_path, filename)
+                project.insert(node_path, filename)
 
-    root_node.visit(print_graph)
+        project.visit(print_graph)
 
 
 class GroupNode:

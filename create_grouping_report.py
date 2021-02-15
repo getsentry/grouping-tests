@@ -1,3 +1,10 @@
+# prelude of careful imports so django app is correctly initialized
+from sentry.runner import configure
+import os
+os.environ["SENTRY_CONF"] = "../getsentry/getsentry/settings.py"
+configure()
+
+
 import logging
 import click
 import sys
@@ -7,6 +14,10 @@ from pathlib import Path
 from typing import List, Dict
 import os
 
+from sentry.event_manager import materialize_metadata
+
+import sentry_sdk
+sentry_sdk.init("")
 
 LOG = logging.getLogger(__name__)
 
@@ -39,9 +50,10 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path):
                 LOG.warn("Event %s has no hashes", event['event_id'])
             else:
                 # Store lightweight version of event, keep payload in filesystem
-                project.insert(node_path, filename)
+                metadata = materialize_metadata(event)
+                project.insert(node_path, metadata)
 
-        project.visit(print_graph)
+        project.visit(print_node)
 
 
 class GroupNode:
@@ -50,7 +62,7 @@ class GroupNode:
 
         self.name = name
         self.item_count = 0
-        self._items = []
+        self.items = []
         self._children: Dict[str, GroupNode] = {}
 
     def insert(self, path: List[str], item):
@@ -58,7 +70,7 @@ class GroupNode:
             head, *tail = path
             self._child(head).insert(tail, item)
         else:
-            self._items.append(item)
+            self.items.append(item)
         self.item_count += 1
 
     def visit(self, visitor, depth=0):
@@ -75,8 +87,12 @@ class GroupNode:
         return child
 
 
-def print_graph(node: GroupNode, depth: int):
-    print_indented(2*depth, f"{node.name} ({node.item_count})")
+def print_node(node: GroupNode, depth: int):
+    if node.items:
+        node_title = node.items[-1]['title']
+    else:
+        node_title = node.name
+    print_indented(2*depth, f"{node_title} ({node.item_count} events)")
 
 
 def print_indented(num_spaces: int, *args, **kwargs):

@@ -15,18 +15,22 @@ from typing import List, Dict
 import os
 
 from sentry.event_manager import materialize_metadata
+from sentry.eventstore.models import Event
 
 import sentry_sdk
 sentry_sdk.init("")
+
+from config import Config
+from grouping import generate_hashes
 
 LOG = logging.getLogger(__name__)
 
 
 @click.command()
 @click.option("--event-dir", required=True, type=Path, help="created using store_events.py")
-@click.option("--config", required=True, type=Path, help="Grouping config")
+@click.option("--config", required=True, type=Config, help="Grouping config")
 @click.option("--report-dir", required=True, type=Path, help="output directory")
-def create_grouping_report(event_dir: Path, config: Path, report_dir: Path):
+def create_grouping_report(event_dir: Path, config: Config, report_dir: Path):
     """ Create a grouping report """
 
     if report_dir.exists():
@@ -43,14 +47,16 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path):
 
         for filename in iglob(f"{entry.path}/**/*json", recursive=True):
             with open(filename, 'r') as file_:
-                event = json.load(file_)
+                event_data = json.load(file_)
+            event_id = event_data['event_id']
+            event = Event(project_id, event_id, group_id=None, data=event_data)
             try:
-                node_path = event['hashes']
+                node_path = generate_hashes(event, config)
             except KeyError:
-                LOG.warn("Event %s has no hashes", event['event_id'])
+                LOG.warn("Event %s has no hashes", event_id)
             else:
                 # Store lightweight version of event, keep payload in filesystem
-                metadata = materialize_metadata(event)
+                metadata = materialize_metadata(event.data)
                 project.insert(node_path, metadata)
 
         project.visit(print_node)

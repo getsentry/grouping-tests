@@ -9,7 +9,7 @@ import logging
 import click
 import sys
 import json
-from glob import iglob
+import glob
 from pathlib import Path
 from typing import List, Dict
 import os
@@ -39,29 +39,35 @@ def create_grouping_report(event_dir: Path, config: Config, report_dir: Path):
         LOG.error(f"Report dir {report_dir} already exists")
         sys.exit(1)
 
-    # TODO: instead of using the stored production hashes, use Event.get_hashes(force_config=...)
-    #       to create a new group tree
     for entry in os.scandir(event_dir):
         project_id = entry.name
 
         # Create an issue tree
         project = GroupNode(project_id)
 
-        for filename in iglob(f"{entry.path}/**/*json", recursive=True):
-            with open(filename, 'r') as file_:
-                event_data = json.load(file_)
-            event_id = event_data['event_id']
-            event = Event(project_id, event_id, group_id=None, data=event_data)
-            try:
-                node_path = generate_hashes(event, config)
-            except KeyError:
-                LOG.warn("Event %s has no hashes", event_id)
-            else:
-                # Store lightweight version of event, keep payload in filesystem
-                metadata = materialize_metadata(event.data)
-                project.insert(node_path, metadata)
+        LOG.info("Project %s: Collecting filenames...", project_id)
+        # iglob would be easier on memory, but we want to use the progress bar
+        filenames = glob.glob(f"{entry.path}/**/*json", recursive=True)
 
+        LOG.info("Project %s: Processing...", project_id)
+        with click.progressbar(filenames) as progress_bar:
+            for filename in progress_bar:
+                with open(filename, 'r') as file_:
+                    event_data = json.load(file_)
+                event_id = event_data['event_id']
+                event = Event(project_id, event_id, group_id=None, data=event_data)
+                try:
+                    node_path = generate_hashes(event, config)
+                except KeyError:
+                    LOG.warn("Event %s has no hashes", event_id)
+                else:
+                    # Store lightweight version of event, keep payload in filesystem
+                    metadata = materialize_metadata(event.data)
+                    project.insert(node_path, metadata)
+
+        print()
         project.visit(print_node)
+        print()
 
 
 def print_node(node: GroupNode, depth: int):

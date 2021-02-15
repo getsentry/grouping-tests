@@ -22,28 +22,38 @@ sentry_sdk.init("")
 
 from config import Config
 from grouping import generate_hashes
-from tree import GroupNode
+from groups.base import EventGroup
+from groups.flat import FlatGroup
+from groups.tree import TreeGroup
 
 
 LOG = logging.getLogger(__name__)
+
+GROUP_TYPES = {
+    'flat': FlatGroup,
+    'tree': TreeGroup,
+}
 
 
 @click.command()
 @click.option("--event-dir", required=True, type=Path, help="created using store_events.py")
 @click.option("--config", required=True, type=Config, help="Grouping config")
 @click.option("--report-dir", required=True, type=Path, help="output directory")
-def create_grouping_report(event_dir: Path, config: Config, report_dir: Path):
+@click.option("--grouping-mode", required=True, type=click.Choice(GROUP_TYPES.keys()))
+def create_grouping_report(event_dir: Path, config: Config, report_dir: Path, grouping_mode):
     """ Create a grouping report """
 
     if report_dir.exists():
         LOG.error(f"Report dir {report_dir} already exists")
         sys.exit(1)
 
+    group_type = GROUP_TYPES[grouping_mode]
+
     for entry in os.scandir(event_dir):
         project_id = entry.name
 
-        # Create an issue tree
-        project = GroupNode(project_id)
+        # Create a root node for all groups
+        project = group_type(project_id)
 
         LOG.info("Project %s: Collecting filenames...", project_id)
         # iglob would be easier on memory, but we want to use the progress bar
@@ -70,7 +80,7 @@ def create_grouping_report(event_dir: Path, config: Config, report_dir: Path):
         print()
 
 
-def print_node(node: GroupNode, depth: int):
+def print_node(node: EventGroup, depth: int):
     if node.items:
         node_title = node.items[-1]['title']
     else:

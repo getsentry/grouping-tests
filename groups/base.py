@@ -1,22 +1,19 @@
 from typing import Dict, List
 
 
-class GroupNode:
+class EventGroup:
+
+    """ Group of events. Subclasses differ in the way they insert / merge events """
 
     def __init__(self, name: str):
 
         self.name = name
         self.item_count = 0
         self.items = []
-        self._children: Dict[str, GroupNode] = {}
+        self._children: Dict[str, EventGroup] = {}
 
-    def insert(self, path: List[str], item):
-        if path:
-            head, *tail = path
-            self._child(head).insert(tail, item)
-        else:
-            self.items.append(item)
-        self.item_count += 1
+    def insert(self, hashes: List[str], item):
+        raise NotImplementedError
 
     def visit(self, visitor, depth=0):
         visitor(self, depth)
@@ -25,8 +22,9 @@ class GroupNode:
 
     def _child(self, name):
         if name not in self._children:
-            child = self._children[name] = GroupNode(name)
+            child = self._children[name] = self.__class__(name)
         else:
             child = self._children[name]
 
         return child
+

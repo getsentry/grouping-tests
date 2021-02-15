@@ -26,7 +26,8 @@ The current version builds a tree from the hashes returned by the grouping confi
 python create_grouping_report.py \
     --events-dir ./events \
     --config ./config.json \
-    --report-dir ./report_$(date)
+    --report-dir ./report_$(date) \
+    --grouping-mode tree
 ```
 
 Example config:

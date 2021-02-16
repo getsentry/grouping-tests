@@ -12,7 +12,6 @@ class Config:
         with open(config_path, 'r') as config_file:
             config = json.load(config_file)
 
-        strategy_config = config['strategy_config']
         self._grouping_config = self._load_grouping_config(config)
         self._normalize_stacktraces = config['normalize_stacktraces']
 

@@ -44,7 +44,6 @@ def store_events(output_dir: Path, num_workers: int):
     with ProcessPoolExecutor(max_workers=num_workers) as pool:
         tasks = pool.map(fetch, lines)
         progress_bar = click.progressbar(tasks, length=len(lines))
-        progress_bar.hidden = False
 
         with progress_bar as nodes:
             for project_id, event_id, node in nodes:
@@ -62,7 +61,7 @@ def fetch(line):
     project_id, event_id = line.strip().split("\t")
     node_id = Event.generate_node_id(project_id, event_id)
 
-    return project_id, event_id, nodestore.get(node_id)
+    return project_id, event_id, nodestore.get(node_id)  # pylint: disable=no-member
 
 
 def store(project_id, event_id, node, output_dir: Path):

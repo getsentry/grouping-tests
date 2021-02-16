@@ -12,7 +12,7 @@ class EventGroup:
         self.items = []
         self._children: Dict[str, EventGroup] = {}
 
-    def insert(self, hashes: List[str], item):
+    def insert(self, flat_hashes: List[str], hierarchical_hashes: List[str], item):
         raise NotImplementedError
 
     def visit(self, visitor, depth=0):

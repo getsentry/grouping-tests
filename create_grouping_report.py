@@ -67,14 +67,12 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
                     event_data = json.load(file_)
                 event_id = event_data['event_id']
                 event = Event(project_id, event_id, group_id=None, data=event_data)
-                try:
-                    node_path = event.get_hashes(force_config=config)
-                except KeyError:
-                    LOG.warn("Project %s: Event %s has no hashes", project_id, event_id)
-                else:
-                    # Store lightweight version of event, keep payload in filesystem
-                    metadata = materialize_metadata(event.data)
-                    project.insert(node_path, metadata)
+
+                flat_hashes, hierarchical_hashes = event.get_hashes(force_config=config)
+
+                # Store lightweight version of event, keep payload in filesystem
+                metadata = materialize_metadata(event.data)
+                project.insert(flat_hashes, hierarchical_hashes, metadata)
 
         print()
         project.visit(print_node)

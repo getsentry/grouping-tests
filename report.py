@@ -2,43 +2,16 @@ from pathlib import Path
 from typing import List
 import os
 
-from django.template import Context, Template
+from django.conf import settings
+from django.template.loader import render_to_string
 
 from groups.base import GroupNode
 
 
-GROUP_NODE_TEMPLATE = Template("""
-
-    <h1>{{ node.name }}</h1>
-
-    {% if ancestors %}
-        <a href="../index.html">⇧ Up</a>
-    {% endif %}
-
-    {% if children %}
-        <h2>Children</h2>
-        <ul>
-            {% for child in children %}
-                <li>
-                    <a href="{{ child.name }}/index.html">{{ child.name }}</a>
-                </li>
-            {% endfor %}
-
-        </ul>
-    {% endif %}
-
-    {% if node.items %}
-        <h2>Events</h2>
-        <ul>
-            {% for event in node.items %}
-                <li>
-                    {{ event.metadata.title }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-""")
-
+# HACK: add template dir to Django settings
+settings.TEMPLATES[0]['DIRS'] = (
+    settings.TEMPLATES[0]['DIRS'] + (Path(__file__).parent / "templates",)
+)
 
 class HTMLReport:
 
@@ -49,11 +22,11 @@ class HTMLReport:
 
     def _visit(self, node: GroupNode, ancestors: List[GroupNode]):
 
-        html = GROUP_NODE_TEMPLATE.render(Context({
+        html = render_to_string("group-node.html", {
             'node': node,
             'children': node.children.values(),
             'ancestors': ancestors,
-        }))
+        })
 
         output_path = self._html_path(node, ancestors)
         os.makedirs(output_path.parent, exist_ok=True)

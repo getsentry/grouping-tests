@@ -79,6 +79,7 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
                 metadata = materialize_metadata(event.data)
                 project.insert(flat_hashes, hierarchical_hashes, metadata)
 
+        LOG.info("Project %s: Saving HTML report...", project_id)
         HTMLReport(project, report_dir)
 
 

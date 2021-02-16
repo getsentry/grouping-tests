@@ -34,9 +34,6 @@ Example config:
 
 ```json
 {
-    "normalize_stacktraces": true,
-    "strategy_config": {
-        "id": "legacy:2019-03-12"
-    }
+    "id": "legacy:2019-03-12"
 }
 ```

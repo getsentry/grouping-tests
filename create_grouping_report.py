@@ -20,8 +20,6 @@ from sentry.eventstore.models import Event
 import sentry_sdk
 sentry_sdk.init("")
 
-from config import Config
-from grouping import generate_hashes
 from groups.base import EventGroup
 from groups.flat import FlatGroup
 from groups.tree import TreeGroup
@@ -37,15 +35,18 @@ GROUP_TYPES = {
 
 @click.command()
 @click.option("--event-dir", required=True, type=Path, help="created using store_events.py")
-@click.option("--config", required=True, type=Config, help="Grouping config")
+@click.option("--config", required=True, type=Path, help="Grouping config")
 @click.option("--report-dir", required=True, type=Path, help="output directory")
 @click.option("--grouping-mode", required=True, type=click.Choice(GROUP_TYPES.keys()))
-def create_grouping_report(event_dir: Path, config: Config, report_dir: Path, grouping_mode):
+def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grouping_mode):
     """ Create a grouping report """
 
     if report_dir.exists():
         LOG.error(f"Report dir {report_dir} already exists")
         sys.exit(1)
+
+    with open(config, 'r') as config_file:
+        config = json.load(config_file)
 
     group_type = GROUP_TYPES[grouping_mode]
 
@@ -67,9 +68,9 @@ def create_grouping_report(event_dir: Path, config: Config, report_dir: Path, gr
                 event_id = event_data['event_id']
                 event = Event(project_id, event_id, group_id=None, data=event_data)
                 try:
-                    node_path = generate_hashes(event, config)
+                    node_path = event.get_hashes(force_config=config)
                 except KeyError:
-                    LOG.warn("Event %s has no hashes", event_id)
+                    LOG.warn("Project %s: Event %s has no hashes", project_id, event_id)
                 else:
                     # Store lightweight version of event, keep payload in filesystem
                     metadata = materialize_metadata(event.data)

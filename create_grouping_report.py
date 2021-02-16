@@ -23,7 +23,7 @@ sentry_sdk.init("")
 from groups.base import GroupNode
 from groups.flat import ListNode
 from groups.tree import TreeNode
-from report import HTMLReport
+from report import HTMLReport, ProjectReport
 
 
 LOG = logging.getLogger(__name__)
@@ -51,12 +51,14 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
     with open(config, 'r') as config_file:
         config = json.load(config_file)
 
-    write_metadata(report_dir, config)
+    report_metadata = write_metadata(report_dir, config)
 
     group_type = GROUP_TYPES[grouping_mode]
 
+    project_ids = []
     for entry in os.scandir(event_dir):
         project_id = entry.name
+        project_ids.append(project_id)
 
         # Create a root node for all groups
         project = group_type(project_id)
@@ -80,7 +82,11 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
                 project.insert(flat_hashes, hierarchical_hashes, metadata)
 
         LOG.info("Project %s: Saving HTML report...", project_id)
-        HTMLReport(project, report_dir)
+
+        ProjectReport(project, report_dir)
+
+    HTMLReport(report_dir, report_metadata, project_ids)
+
 
 
 def write_metadata(report_dir: Path, config: dict):
@@ -93,6 +99,8 @@ def write_metadata(report_dir: Path, config: dict):
 
     with open(report_dir / "meta.json", 'w') as f:
         json.dump(meta, f, indent=4)
+
+    return meta
 
 
 def git_revision():

@@ -10,7 +10,7 @@ class TreeNode(GroupNode):
         """ Event hashes are interpreted as a path down a tree of event groups """
         if hierarchical_hashes:
             head, *tail = hierarchical_hashes
-            self._child(head).insert(tail, item)
+            self._child(head).insert([], tail, item)
         else:
             self.items.append(item)
 

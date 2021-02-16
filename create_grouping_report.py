@@ -20,16 +20,16 @@ from sentry.eventstore.models import Event
 import sentry_sdk
 sentry_sdk.init("")
 
-from groups.base import EventGroup
-from groups.flat import FlatGroup
-from groups.tree import TreeGroup
+from groups.base import GroupNode
+from groups.flat import ListNode
+from groups.tree import TreeNode
 
 
 LOG = logging.getLogger(__name__)
 
 GROUP_TYPES = {
-    'flat': FlatGroup,
-    'tree': TreeGroup,
+    'flat': ListNode,
+    'tree': TreeNode,
 }
 
 
@@ -79,7 +79,7 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
         print()
 
 
-def print_node(node: EventGroup, depth: int):
+def print_node(node: GroupNode, depth: int):
     if node.items:
         node_title = node.items[-1]['title']
     else:

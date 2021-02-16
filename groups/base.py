@@ -10,7 +10,7 @@ class GroupNode:
         self.name = name
         self.item_count = 0
         self.items = []
-        self._children: Dict[str, GroupNode] = {}
+        self.children: Dict[str, GroupNode] = {}
 
     def insert(self, flat_hashes: List[str], hierarchical_hashes: List[str], item):
         self._insert(flat_hashes, hierarchical_hashes, item)
@@ -20,7 +20,7 @@ class GroupNode:
         if ancestors is None:
             ancestors = []
         visitor(self, ancestors)
-        for child in self._children.values():
+        for child in self.children.values():
             child.visit(visitor, ancestors + [self])
 
     def _insert(self, flat_hashes: List[str], hierarchical_hashes: List[str], item):
@@ -33,11 +33,11 @@ class GroupNode:
         raise NotImplementedError
 
     def _child(self, name):
-        if name not in self._children:
+        if name not in self.children:
             klass = self._child_type()
-            child = self._children[name] = klass(name)
+            child = self.children[name] = klass(name)
         else:
-            child = self._children[name]
+            child = self.children[name]
 
         return child
 

@@ -23,6 +23,7 @@ sentry_sdk.init("")
 from groups.base import GroupNode
 from groups.flat import ListNode
 from groups.tree import TreeNode
+from report import HTMLReport
 
 
 LOG = logging.getLogger(__name__)
@@ -78,23 +79,7 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
                 metadata = materialize_metadata(event.data)
                 project.insert(flat_hashes, hierarchical_hashes, metadata)
 
-        print()
-        project.visit(print_node)
-        print()
-
-
-def print_node(node: GroupNode, ancestors: List[GroupNode]):
-    if node.items:
-        node_title = node.items[-1]['title']
-    else:
-        node_title = node.name
-    print_indented(2*len(ancestors), f"{node_title} ({node.item_count} events)")
-
-
-def print_indented(num_spaces: int, *args, **kwargs):
-    for _ in range(num_spaces):
-        sys.stdout.write(" ")
-    print(*args, **kwargs)
+        HTMLReport(project, report_dir)
 
 
 def write_metadata(report_dir: Path, config: dict):

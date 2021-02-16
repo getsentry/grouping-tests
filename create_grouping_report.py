@@ -83,12 +83,12 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
         print()
 
 
-def print_node(node: GroupNode, depth: int):
+def print_node(node: GroupNode, ancestors: List[GroupNode]):
     if node.items:
         node_title = node.items[-1]['title']
     else:
         node_title = node.name
-    print_indented(2*depth, f"{node_title} ({node.item_count} events)")
+    print_indented(2*len(ancestors), f"{node_title} ({node.item_count} events)")
 
 
 def print_indented(num_spaces: int, *args, **kwargs):

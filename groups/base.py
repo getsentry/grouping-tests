@@ -16,10 +16,12 @@ class GroupNode:
         self._insert(flat_hashes, hierarchical_hashes, item)
         self.item_count += 1
 
-    def visit(self, visitor, depth=0):
-        visitor(self, depth)
+    def visit(self, visitor, ancestors=None):
+        if ancestors is None:
+            ancestors = []
+        visitor(self, ancestors)
         for child in self._children.values():
-            child.visit(visitor, depth + 1)
+            child.visit(visitor, ancestors + [self])
 
     def _insert(self, flat_hashes: List[str], hierarchical_hashes: List[str], item):
         """ Override in subclasses """

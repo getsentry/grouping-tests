@@ -45,8 +45,12 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
         LOG.error(f"Report dir {report_dir} already exists")
         sys.exit(1)
 
+    os.makedirs(report_dir, exist_ok=True)
+
     with open(config, 'r') as config_file:
         config = json.load(config_file)
+
+    write_metadata(report_dir, config)
 
     group_type = GROUP_TYPES[grouping_mode]
 
@@ -91,6 +95,27 @@ def print_indented(num_spaces: int, *args, **kwargs):
     for _ in range(num_spaces):
         sys.stdout.write(" ")
     print(*args, **kwargs)
+
+
+def write_metadata(report_dir: Path, config: dict):
+
+    meta = {
+        'cli_args': sys.argv,
+        'config': config,
+        'grouping_tests_revision': git_revision()
+    }
+
+    with open(report_dir / "meta.json", 'w') as f:
+        json.dump(meta, f, indent=4)
+
+
+def git_revision():
+    git = Path(__file__).parent / ".git"
+    with open(git /  "HEAD") as f:
+        head = f.readline().strip().split(": ")[1]
+    with open(git / head) as f:
+
+        return f.readline().strip()
 
 
 if __name__ == "__main__":

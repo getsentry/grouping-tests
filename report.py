@@ -38,7 +38,10 @@ class ProjectReport:
         render_to_file("group-node.html", output_path, {
             'node': node,
             'children': node.children.values(),
-            'ancestors': ancestors,
+            'ancestors': reversed([
+                ((i+1) * "../", ancestor)
+                for i, ancestor in enumerate(reversed(ancestors))
+            ]),
         })
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):

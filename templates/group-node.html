@@ -3,9 +3,23 @@
 {% block title %}{{ node.name }}{% endblock %}
 
 {% block body %}
+
+    <div class="container">
+
     <h1>{{ node.name }}</h1>
 
-    <a href="../index.html">⇧ Up</a>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for prefix, ancestor in ancestors %}
+                <li class="breadcrumb-item">
+                    <a href="{{ prefix }}index.html">{{ ancestor.name }}</a>
+                </li>
+            {% endfor %}
+            <li class="breadcrumb-item active" aria-current="page">
+                {{ node.name }}
+            </li>
+        </ol>
+    </nav>
 
     {% if children %}
         <h2>Children</h2>
@@ -29,4 +43,5 @@
             {% endfor %}
         </ul>
     {% endif %}
+        </div>
 {% endblock %}

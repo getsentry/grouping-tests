@@ -42,6 +42,7 @@ class ProjectReport:
                 ((i+1) * "../", ancestor)
                 for i, ancestor in enumerate(reversed(ancestors))
             ]),
+            'home': (len(ancestors) + 1) * "../"
         })
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):

@@ -10,6 +10,9 @@
 
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{{ home }}index.html">Home</a>
+            </li>
             {% for prefix, ancestor in ancestors %}
                 <li class="breadcrumb-item">
                     <a href="{{ prefix }}index.html">{{ ancestor.name }}</a>

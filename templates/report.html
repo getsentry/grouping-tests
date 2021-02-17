@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Grouping Report{% endblock %}
+
+{% block body %}
+    <h1>Grouping Report</h1>
+
+    {% if projects %}
+        <h2>Projects</h2>
+        <ul>
+            {% for project in projects %}
+                <li>
+                    <a href="{{ project }}/index.html">{{ project }}</a>
+                </li>
+            {% endfor %}
+
+        </ul>
+    {% endif %}
+
+    <h2>Metadata</h2>
+    <pre>{{ metadata }}
+    </pre>
+{% endblock %}

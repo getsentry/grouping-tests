@@ -24,14 +24,19 @@
         </ol>
     </nav>
 
-    {% if children %}
-        <h2>Children</h2>
-        <ul>
-            {% for child in children %}
-                <li>
-                    <a href="{{ child.name }}/index.html">{{ child.name }}</a>
-                </li>
-            {% endfor %}
+    {% if descendants %}
+        <h2>Issue Tree</h2>
+
+        {% for indent, url, descendant in descendants %}
+            <div class="row gap-3">
+                <div class="col-{{ indent }}"></div>
+                <div class="col">
+                    <div class="bg-light border">
+                        <a href="{{ url }}">{{ descendant.name }}</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
 
         </ul>
     {% endif %}

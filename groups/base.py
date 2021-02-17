@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Any, Dict, List
 
 
 class GroupNode:
@@ -8,13 +8,21 @@ class GroupNode:
     def __init__(self, name: str):
 
         self.name = name
-        self.item_count = 0
-        self.items = []
+        self.total_item_count = 0  # Sum of items in self + descendants
+        self.items: List[Any] = []
         self.children: Dict[str, GroupNode] = {}
+
+        self.exemplar = None  # Item representing this node
+
+    @property
+    def item_count(self):
+        return len(self.items)
 
     def insert(self, flat_hashes: List[str], hierarchical_hashes: List[str], item):
         self._insert(flat_hashes, hierarchical_hashes, item)
-        self.item_count += 1
+        if self.exemplar is None:
+            self.exemplar = item
+        self.total_item_count += 1
 
     def visit(self, visitor, ancestors=None):
         if ancestors is None:

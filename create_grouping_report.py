@@ -78,8 +78,8 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
                 flat_hashes, hierarchical_hashes = event.get_hashes(force_config=config)
 
                 # Store lightweight version of event, keep payload in filesystem
-                metadata = materialize_metadata(event.data)
-                project.insert(flat_hashes, hierarchical_hashes, metadata)
+                item = extract_event_data(event)
+                project.insert(flat_hashes, hierarchical_hashes, item)
 
         LOG.info("Project %s: Saving HTML report...", project_id)
 
@@ -87,6 +87,15 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
 
     HTMLReport(report_dir, report_metadata, project_ids)
 
+
+def extract_event_data(event: Event) -> dict:
+    title, *subtitle = event.title.split(": ")
+
+    return {
+        'title': title,
+        'subtitle': ": ".join(subtitle),
+        'location': event.location
+    }
 
 
 def write_metadata(report_dir: Path, config: dict):

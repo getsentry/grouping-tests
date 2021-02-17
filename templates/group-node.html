@@ -1,12 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ node.name }}{% endblock %}
+{% block title %}{{ node.exemplar.title }}{% endblock %}
 
 {% block body %}
 
     <div class="container">
-
-    <h1>{{ node.name }}</h1>
 
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -15,24 +13,36 @@
             </li>
             {% for prefix, ancestor in ancestors %}
                 <li class="breadcrumb-item">
-                    <a href="{{ prefix }}index.html">{{ ancestor.name }}</a>
+                    <a href="{{ prefix }}index.html">{{ ancestor.exemplar.title }}</a>
                 </li>
             {% endfor %}
             <li class="breadcrumb-item active" aria-current="page">
-                {{ node.name }}
+                {{ node.exemplar.title }}
             </li>
         </ol>
     </nav>
 
+    <h1>{{ node.exemplar.title }}</h1>
+
+    <p>{{ node.exemplar.subtitle }}</p>
+
     {% if descendants %}
         <h2>Issue Tree</h2>
 
-        {% for indent, url, descendant in descendants %}
+        {% for indent, url, node in descendants %}
             <div class="row gap-3">
                 <div class="col-{{ indent }}"></div>
                 <div class="col">
-                    <div class="bg-light border">
-                        <a href="{{ url }}">{{ descendant.name }}</a>
+                    <div class="card">
+                        <div class="card-header">
+                            <a href="{{ url }}">{{ node.exemplar.title }}</a>
+                            <span class="text-muted">
+                                {{ node.exemplar.location|default_if_none:"" }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            {{ node.exemplar.subtitle }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -46,7 +56,9 @@
         <ul>
             {% for event in node.items %}
                 <li>
-                    {{ event.metadata.title }}
+                    <a href="{{ event.json_url }}">
+                        {{ event.title }}: {{ event.subtitle }}
+                    </a>
                 </li>
             {% endfor %}
         </ul>

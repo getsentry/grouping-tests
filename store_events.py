@@ -31,6 +31,10 @@ def store_events(output_dir: Path, num_workers: int):
 
     """
 
+
+    global global_output_dir
+    global_output_dir = output_dir  # Used in fetch_and_store
+
     if output_dir.exists():
         print(f"ERROR: Output dir {output_dir} already exists")
         sys.exit(1)
@@ -43,26 +47,28 @@ def store_events(output_dir: Path, num_workers: int):
     print("Fetching event payloads...")
     with Manager() as manager:
         with manager.Pool(num_workers) as pool:
-            tasks = pool.imap_unordered(fetch, lines)
+            tasks = pool.imap_unordered(fetch_and_store, lines)
             progress_bar = click.progressbar(tasks, length=len(lines))
 
-            with progress_bar as nodes:
-                for project_id, event_id, node in nodes:
-                    if node is None:
-                        print(
-                            "WARNING: Got None from nodestore for project / event",
-                            project_id, event_id, file=sys.stderr)
-                    else:
-                        store(project_id, event_id, node, output_dir)
+            with progress_bar as results:
+                for _ in results:
+                    pass
+
 
     print("Done. Time ellapsed: %s" % (time.time() - t0))
 
 
-def fetch(line):
+def fetch_and_store(line):
     project_id, event_id = line.strip().split("\t")
     node_id = Event.generate_node_id(project_id, event_id)
+    node = nodestore.get(node_id)  # pylint: disable=no-member
 
-    return project_id, event_id, nodestore.get(node_id)  # pylint: disable=no-member
+    if node is None:
+        print(
+            "WARNING: Got None from nodestore for project / event",
+            project_id, event_id, file=sys.stderr)
+    else:
+        store(project_id, event_id, node, global_output_dir)
 
 
 def store(project_id, event_id, node, output_dir: Path):

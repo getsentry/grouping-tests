@@ -6,7 +6,7 @@ configure()
 
 import logging
 import click
-from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Manager
 import sys
 import json
 import textwrap
@@ -41,18 +41,19 @@ def store_events(output_dir: Path, num_workers: int):
     print("Reading event IDs from stdin...")
     lines = list(sys.stdin)  # So we have a length for the progress bar
 
-    with ProcessPoolExecutor(max_workers=num_workers) as pool:
-        tasks = pool.map(fetch, lines)
-        progress_bar = click.progressbar(tasks, length=len(lines))
+    with Manager() as manager:
+        with manager.Pool(num_workers) as pool:
+            tasks = pool.imap_unordered(fetch, lines)
+            progress_bar = click.progressbar(tasks, length=len(lines))
 
-        with progress_bar as nodes:
-            for project_id, event_id, node in nodes:
-                if node is None:
-                    print(
-                        "WARNING: Got None from nodestore for project / event",
-                        project_id, event_id, file=sys.stderr)
-                else:
-                    store(project_id, event_id, node, output_dir)
+            with progress_bar as nodes:
+                for project_id, event_id, node in nodes:
+                    if node is None:
+                        print(
+                            "WARNING: Got None from nodestore for project / event",
+                            project_id, event_id, file=sys.stderr)
+                    else:
+                        store(project_id, event_id, node, output_dir)
 
     print("Done. Time ellapsed: %s" % (time.time() - t0))
 

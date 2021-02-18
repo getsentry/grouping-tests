@@ -45,14 +45,12 @@ class ProjectReport:
 
         output_path = self._html_path(node, ancestors)
 
-        is_project = node.name.startswith("project_")
-
         render_to_file("group-node.html", output_path, {
-            'title': node.name if is_project else node.exemplar['title'],
-            'subtitle': None if is_project else node.exemplar['subtitle'],
+            'title': node_title(node),
+            'subtitle': node_subtitle(node),
             'node': node,
             'ancestors': reversed([
-                ((i+1) * "../", ancestor)
+                ((i+1) * "../", node_title(ancestor))
                 for i, ancestor in enumerate(reversed(ancestors))
             ]),
             'home': (len(ancestors) + 1) * "../",
@@ -77,3 +75,21 @@ def render_to_file(template_name: str, output_path: Path, context: dict):
 
 def descendant_url(node, ancestors):
     return "/".join(a.name for a in ancestors + [node]) + "/index.html"
+
+
+def is_project(node):
+    return node.name.startswith("project_")
+
+
+def node_title(node):
+    if node.exemplar is None or is_project(node):
+        return node.name
+
+    return node.exemplar['title']
+
+
+def node_subtitle(node):
+    if node.exemplar is None or is_project(node):
+        return node.name
+
+    return node.exemplar['subtitle']

@@ -11,9 +11,9 @@
             <li class="breadcrumb-item">
                 <a href="{{ home }}index.html">Home</a>
             </li>
-            {% for prefix, ancestor in ancestors %}
+            {% for prefix, name in ancestors %}
                 <li class="breadcrumb-item">
-                    <a href="{{ prefix }}index.html">{{ ancestor.exemplar.title }}</a>
+                    <a href="{{ prefix }}index.html">{{ name }}</a>
                 </li>
             {% endfor %}
             <li class="breadcrumb-item active" aria-current="page">

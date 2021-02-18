@@ -39,13 +39,17 @@ class ProjectReport:
         def collect_descendants(node, ancestors):
             ancestors = ancestors[1:]  # Skip self
             descendants.append((
-                len(ancestors), descendant_url(node, ancestors), node
+                3*len(ancestors), descendant_url(node, ancestors), node
             ))
         node.visit(collect_descendants)
 
         output_path = self._html_path(node, ancestors)
 
+        is_project = node.name.startswith("project_")
+
         render_to_file("group-node.html", output_path, {
+            'title': node.name if is_project else node.exemplar['title'],
+            'subtitle': None if is_project else node.exemplar['subtitle'],
             'node': node,
             'ancestors': reversed([
                 ((i+1) * "../", ancestor)

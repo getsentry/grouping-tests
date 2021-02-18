@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ node.exemplar.title }}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block body %}
 
@@ -17,33 +17,29 @@
                 </li>
             {% endfor %}
             <li class="breadcrumb-item active" aria-current="page">
-                {{ node.exemplar.title }}
+                {{ title }}
             </li>
         </ol>
     </nav>
 
-    <h1>{{ node.exemplar.title }}</h1>
+    <h1>{{ title }}</h1>
 
-    <p>{{ node.exemplar.subtitle }}</p>
+    {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
 
     {% if descendants %}
-        <h2>Issue Tree</h2>
-
+        <h2 class="mt-3">Issue Tree</h2>
         {% for indent, url, node in descendants %}
-            <div class="row gap-3">
-                <div class="col-{{ indent }}"></div>
-                <div class="col">
-                    <div class="card">
-                        <div class="card-header">
-                            <a href="{{ url }}">{{ node.exemplar.title }}</a>
-                            <span class="text-muted">
-                                {{ node.exemplar.location|default_if_none:"" }}
-                            </span>
-                        </div>
-                        <div class="card-body">
-                            {{ node.exemplar.subtitle }}
-                        </div>
-                    </div>
+            <div class="card {% if indent %}mt-1{% else %}mt-3{% endif %}"
+                style="margin-left: {{ indent }}rem!important">
+                <div class="card-header">
+                    <a href="{{ url }}">{{ node.exemplar.title }}</a>
+                    <span class="text-muted">
+                        {{ node.exemplar.location|default_if_none:"" }}
+                    </span>
+                    {{ node.items|length }} events
+                </div>
+                <div class="card-body">
+                    {{ node.exemplar.subtitle }}
                 </div>
             </div>
         {% endfor %}

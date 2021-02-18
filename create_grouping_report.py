@@ -10,8 +10,9 @@ import click
 import sys
 import json
 import glob
+import pickle
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 import os
 
 from sentry.event_manager import materialize_metadata
@@ -40,8 +41,13 @@ GROUP_TYPES = {
 @click.option("--grouping-mode", required=True, type=click.Choice(GROUP_TYPES.keys()))
 @click.option("--report-dir", required=True, type=Path, help="output directory")
 @click.option("--events-base-url", type=str, help="Base URL for JSON links. Defaults to --event-dir")
+@click.option(
+    "--pickle-dir",
+    type=Path,
+    help="If set, cache issue trees as pickles. Useful for development.")
 def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
-                           grouping_mode: str, events_base_url: str):
+                           grouping_mode: str, events_base_url: str,
+                           pickle_dir: Path):
     """ Create a grouping report """
 
     if events_base_url is None:
@@ -52,6 +58,9 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
         sys.exit(1)
 
     os.makedirs(report_dir, exist_ok=True)
+
+    if pickle_dir:
+        os.makedirs(pickle_dir, exist_ok=True)
 
     with open(config, 'r') as config_file:
         config = json.load(config_file)
@@ -65,38 +74,59 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
         project_id = entry.name
         project_ids.append(project_id)
 
-        # Create a root node for all groups
-        project = group_type(project_id)
+        project = None
+        if pickle_dir:
+            LOG.info("Project %s: Load from pickle...", project_id)
+            project = load_pickle(pickle_dir, project_id)
 
-        LOG.info("Project %s: Collecting filenames...", project_id)
-        # iglob would be easier on memory, but we want to use the progress bar
-        filenames = glob.glob(f"{entry.path}/**/*json", recursive=True)
-
-        LOG.info("Project %s: Processing...", project_id)
-        with click.progressbar(filenames) as progress_bar:
-            for filename in progress_bar:
-                with open(filename, 'r') as file_:
-                    event_data = json.load(file_)
-                event_id = event_data['event_id']
-                event = Event(project_id, event_id, group_id=None, data=event_data)
-
-                flat_hashes, hierarchical_hashes = event.get_hashes(force_config=config)
-
-                if not hierarchical_hashes:
-                    # Prevent events ending up in the project node
-                    hierarchical_hashes = ["<NO-HASH>"]
-
-                # Store lightweight version of event, keep payload in filesystem
-                item = extract_event_data(event)
-                item['json_url'] = Path(filename).relative_to(event_dir)
-                project.insert(flat_hashes, hierarchical_hashes, item)
+        if project is None:
+            project = generate_project_tree(
+                event_dir, config, group_type, entry)
+            if pickle_dir:
+                store_pickle(pickle_dir, project)
 
         LOG.info("Project %s: Saving HTML report...", project_id)
 
         ProjectReport(project, report_dir, events_base_url)
 
+        LOG.info("Project %s: Done.", project_id)
+
     HTMLReport(report_dir, report_metadata, project_ids)
 
+    LOG.info("Done.")
+
+
+def generate_project_tree(event_dir, config, group_type, entry):
+
+    project_id = entry.name
+
+    # Create a root node for all groups
+    project = group_type(project_id)
+
+    LOG.info("Project %s: Collecting filenames...", project_id)
+    # iglob would be easier on memory, but we want to use the progress bar
+    filenames = glob.glob(f"{entry.path}/**/*json", recursive=True)
+
+    LOG.info("Project %s: Processing...", project_id)
+    with click.progressbar(filenames) as progress_bar:
+        for filename in progress_bar:
+            with open(filename, 'r') as file_:
+                event_data = json.load(file_)
+            event_id = event_data['event_id']
+            event = Event(project_id, event_id, group_id=None, data=event_data)
+
+            flat_hashes, hierarchical_hashes = event.get_hashes(force_config=config)
+
+            if not hierarchical_hashes:
+                # Prevent events ending up in the project node
+                hierarchical_hashes = ["<NO-HASH>"]
+
+            # Store lightweight version of event, keep payload in filesystem
+            item = extract_event_data(event)
+            item['json_url'] = Path(filename).relative_to(event_dir)
+            project.insert(flat_hashes, hierarchical_hashes, item)
+
+    return project
 
 def extract_event_data(event: Event) -> dict:
     title, *subtitle = event.title.split(": ")
@@ -121,6 +151,21 @@ def write_metadata(report_dir: Path, config: dict):
         json.dump(meta, f, indent=4)
 
     return meta
+
+
+def load_pickle(pickle_dir: Path, project_id: str) -> Optional[GroupNode]:
+    filename = pickle_dir / f"{project_id}.pickle"
+    try:
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return None
+
+
+def store_pickle(pickle_dir: Path, project: GroupNode):
+    filename = pickle_dir / f"{project.name}.pickle"
+    with open(filename, 'wb') as f:
+        pickle.dump(project, file=f)
 
 
 def git_revision():

@@ -98,9 +98,10 @@ def extract_event_data(event: Event) -> dict:
     title, *subtitle = event.title.split(": ")
 
     return {
+        'event_id': event.event_id,
         'title': title,
         'subtitle': ": ".join(subtitle),
-        'location': event.location
+        'culprit': event.culprit
     }
 
 

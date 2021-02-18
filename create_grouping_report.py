@@ -37,10 +37,15 @@ GROUP_TYPES = {
 @click.command()
 @click.option("--event-dir", required=True, type=Path, help="created using store_events.py")
 @click.option("--config", required=True, type=Path, help="Grouping config")
-@click.option("--report-dir", required=True, type=Path, help="output directory")
 @click.option("--grouping-mode", required=True, type=click.Choice(GROUP_TYPES.keys()))
-def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grouping_mode):
+@click.option("--report-dir", required=True, type=Path, help="output directory")
+@click.option("--events-base-url", type=str, help="Base URL for JSON links. Defaults to --event-dir")
+def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
+                           grouping_mode: str, events_base_url: str):
     """ Create a grouping report """
+
+    if events_base_url is None:
+        events_base_url = f"file://{event_dir.absolute()}"
 
     if report_dir.exists():
         LOG.error(f"Report dir {report_dir} already exists")
@@ -79,11 +84,12 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path, grou
 
                 # Store lightweight version of event, keep payload in filesystem
                 item = extract_event_data(event)
+                item['json_url'] = Path(filename).relative_to(event_dir)
                 project.insert(flat_hashes, hierarchical_hashes, item)
 
         LOG.info("Project %s: Saving HTML report...", project_id)
 
-        ProjectReport(project, report_dir)
+        ProjectReport(project, report_dir, events_base_url)
 
     HTMLReport(report_dir, report_metadata, project_ids)
 

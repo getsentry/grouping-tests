@@ -26,8 +26,9 @@ class HTMLReport:
 
 class ProjectReport:
 
-    def __init__(self, root: GroupNode, parent_dir: Path):
+    def __init__(self, root: GroupNode, parent_dir: Path, events_base_url: str):
         self._root_dir = parent_dir
+        self._events_base_url = events_base_url
         self._current_depth = 0
         root.visit(self._visit)
 
@@ -52,6 +53,7 @@ class ProjectReport:
             ]),
             'home': (len(ancestors) + 1) * "../",
             'descendants': descendants[1:],  # Skip self
+            'events_base_url': self._events_base_url,
         })
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):

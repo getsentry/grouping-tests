@@ -52,11 +52,11 @@
     {% endif %}
 
     {% if node.items %}
-        <h2>Events</h2>
-        <ul>
+        <h2 class="mt-3">Events ({{ node.items|length }})</h2>
+        <ul class="list-group">
             {% for event in node.items %}
-                <li>
-                    <a href="{{ event.json_url }}">
+                <li class="list-group-item">
+                    <a href="{{ events_base_url }}/{{ event.json_url }}">
                         {{ event.title }}: {{ event.subtitle }}
                     </a>
                 </li>

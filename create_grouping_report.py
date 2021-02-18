@@ -1,7 +1,6 @@
 # prelude of careful imports so django app is correctly initialized
 from sentry.runner import configure
 import os
-os.environ["SENTRY_CONF"] = "../getsentry/getsentry/settings.py"
 configure()
 
 

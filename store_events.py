@@ -1,7 +1,5 @@
 # prelude of careful imports so django app is correctly initialized
 from sentry.runner import configure
-import os
-os.environ["SENTRY_CONF"] = "../getsentry/getsentry/settings.py"
 configure()
 
 import logging
@@ -12,6 +10,7 @@ import json
 import textwrap
 import time
 from pathlib import Path
+import os
 
 from sentry import nodestore
 from sentry.eventstore.models import Event
@@ -41,6 +40,7 @@ def store_events(output_dir: Path, num_workers: int):
     print("Reading event IDs from stdin...")
     lines = list(sys.stdin)  # So we have a length for the progress bar
 
+    print("Fetching event payloads...")
     with Manager() as manager:
         with manager.Pool(num_workers) as pool:
             tasks = pool.imap_unordered(fetch, lines)

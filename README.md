@@ -3,7 +3,7 @@ Create &amp; visualize output of different grouping strategies
 
 ## Prerequisites
 
-For now, run these scripts in the virtualenv of your local getsentry installation. The scripts assume you placed this repo in the same parent directory as the getsentry repo itself.
+For now, run these scripts in the virtualenv of your local sentry installation.
 
 This requires that you checkout sentry's [hierarchical group hashes](https://github.com/getsentry/sentry/pull/23861) branch.
 

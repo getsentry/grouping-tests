@@ -82,6 +82,10 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
 
                 flat_hashes, hierarchical_hashes = event.get_hashes(force_config=config)
 
+                if not hierarchical_hashes:
+                    # Prevent events ending up in the project node
+                    hierarchical_hashes = ["<NO-HASH>"]
+
                 # Store lightweight version of event, keep payload in filesystem
                 item = extract_event_data(event)
                 item['json_url'] = Path(filename).relative_to(event_dir)

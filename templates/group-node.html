@@ -41,7 +41,13 @@
                         </span>
                     </div>
                     <div class="float-end text-muted">
-                        {{ node.items|length }} events
+                        <span title="events in this node">
+                            📎 {{ node.item_count }}
+                        </span>
+                        /
+                        <span title="events in subtree">
+                            📁 {{ node.total_item_count }}
+                        </span>
                     </div>
                 </div>
                 {% if node.exemplar.subtitle %}

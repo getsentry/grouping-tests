@@ -21,7 +21,7 @@ sentry_sdk.init("")
 
 @click.command()
 @click.option("--output-dir", required=True, type=Path)
-@click.option("--num-workers", default=1)
+@click.option("--num-workers", type=int, help="Defaults to Python multiprocessing default")
 def store_events(output_dir: Path, num_workers: int):
     """ Store event payloads as JSON files
 

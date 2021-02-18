@@ -10,9 +10,11 @@ import sys
 import json
 import glob
 import pickle
+import time
 from pathlib import Path
 from typing import List, Dict, Optional
 import os
+from multiprocessing import Manager
 
 from sentry.event_manager import materialize_metadata
 from sentry.eventstore.models import Event
@@ -40,13 +42,14 @@ GROUP_TYPES = {
 @click.option("--grouping-mode", required=True, type=click.Choice(GROUP_TYPES.keys()))
 @click.option("--report-dir", required=True, type=Path, help="output directory")
 @click.option("--events-base-url", type=str, help="Base URL for JSON links. Defaults to --event-dir")
+@click.option("--num-workers", type=int, help="Parallelize. Default corresponds to Python multiprocessing default")
 @click.option(
     "--pickle-dir",
     type=Path,
     help="If set, cache issue trees as pickles. Useful for development.")
 def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
                            grouping_mode: str, events_base_url: str,
-                           pickle_dir: Path):
+                           pickle_dir: Path, num_workers: int):
     """ Create a grouping report """
 
     if events_base_url is None:
@@ -68,6 +71,8 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
 
     group_type = GROUP_TYPES[grouping_mode]
 
+    t0 = time.time()
+
     project_ids = []
     for entry in os.scandir(event_dir):
         project_id = entry.name
@@ -80,7 +85,7 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
 
         if project is None:
             project = generate_project_tree(
-                event_dir, config, group_type, entry)
+                event_dir, config, group_type, entry, num_workers)
             if pickle_dir:
                 store_pickle(pickle_dir, project)
 
@@ -92,10 +97,10 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
 
     HTMLReport(report_dir, report_metadata, project_ids)
 
-    LOG.info("Done.")
+    LOG.info("Done. Time ellapsed: %s", (time.time() - t0))
 
 
-def generate_project_tree(event_dir, config, group_type, entry):
+def generate_project_tree(event_dir, config, group_type, entry, num_workers):
 
     project_id = entry.name
 
@@ -107,25 +112,40 @@ def generate_project_tree(event_dir, config, group_type, entry):
     filenames = glob.glob(f"{entry.path}/**/*json", recursive=True)
 
     LOG.info("Project %s: Processing...", project_id)
-    with click.progressbar(filenames) as progress_bar:
-        for filename in progress_bar:
-            with open(filename, 'r') as file_:
-                event_data = json.load(file_)
-            event_id = event_data['event_id']
-            event = Event(project_id, event_id, group_id=None, data=event_data)
-
-            flat_hashes, hierarchical_hashes = event.get_hashes(force_config=config)
-
-            if not hierarchical_hashes:
-                # Prevent events ending up in the project node
-                hierarchical_hashes = ["<NO-HASH>"]
-
-            # Store lightweight version of event, keep payload in filesystem
-            item = extract_event_data(event)
-            item['json_url'] = Path(filename).relative_to(event_dir)
-            project.insert(flat_hashes, hierarchical_hashes, item)
+    with Manager() as manager:
+        with manager.Pool(num_workers) as pool:
+            task_input = [  # NOTE: unnecessary data duplication
+                (event_dir, config, project_id, filename)
+                for filename in filenames
+            ]
+            results = pool.imap_unordered(process_one, task_input)
+            progress_bar = click.progressbar(results, length=len(filenames))
+            with progress_bar:
+                for flat_hashes, hierarchical_hashes, item in progress_bar:
+                    project.insert(flat_hashes, hierarchical_hashes, item)
 
     return project
+
+
+def process_one(task_input):
+    event_dir, config, project_id, filename = task_input
+    with open(filename, 'r') as file_:
+        event_data = json.load(file_)
+    event_id = event_data['event_id']
+    event = Event(project_id, event_id, group_id=None, data=event_data)
+
+    flat_hashes, hierarchical_hashes = event.get_hashes(force_config=config)
+
+    if not hierarchical_hashes:
+        # Prevent events ending up in the project node
+        hierarchical_hashes = ["<NO-HASH>"]
+
+    # Store lightweight version of event, keep payload in filesystem
+    item = extract_event_data(event)
+    item['json_url'] = Path(filename).relative_to(event_dir)
+
+    return flat_hashes, hierarchical_hashes, item
+
 
 def extract_event_data(event: Event) -> dict:
     title, *subtitle = event.title.split(": ")

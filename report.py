@@ -48,6 +48,7 @@ class ProjectReport:
         render_to_file("group-node.html", output_path, {
             'title': node_title(node),
             'subtitle': node_subtitle(node),
+            'hash': node_hash(node),
             'node': node,
             'ancestors': reversed([
                 ((i+1) * "../", node_title(ancestor))
@@ -90,6 +91,10 @@ def node_title(node):
 
 def node_subtitle(node):
     if node.exemplar is None or is_project(node):
-        return node.name
+        return None
 
     return node.exemplar['subtitle']
+
+
+def node_hash(node):
+    return None if is_project(node) else node.name

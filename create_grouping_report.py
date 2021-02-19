@@ -1,6 +1,5 @@
 # prelude of careful imports so django app is correctly initialized
 from sentry.runner import configure
-import os
 configure()
 
 
@@ -22,10 +21,10 @@ from sentry.eventstore.models import Event
 import sentry_sdk
 sentry_sdk.init("")
 
-from groups.base import GroupNode
-from groups.flat import ListNode
-from groups.tree import TreeNode
-from report import HTMLReport, ProjectReport
+from grouping_tests.groups.base import GroupNode
+from grouping_tests.groups.flat import ListNode
+from grouping_tests.groups.tree import TreeNode
+from grouping_tests.report import HTMLReport, ProjectReport
 
 
 LOG = logging.getLogger(__name__)

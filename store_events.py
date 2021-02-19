@@ -30,8 +30,6 @@ def store_events(output_dir: Path, num_workers: int):
         clickhouse-client --query 'SELECT project_id, event_id FROM sentry_local LIMIT 100' | python store_events.py --output-dir ./events
 
     """
-
-
     global global_output_dir
     global_output_dir = output_dir  # Used in fetch_and_store
 

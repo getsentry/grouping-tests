@@ -6,7 +6,7 @@ import os
 from django.conf import settings
 from django.template.loader import render_to_string
 
-from groups.base import GroupNode
+from grouping_tests.groups.base import GroupNode
 
 
 # HACK: add template dir to Django settings

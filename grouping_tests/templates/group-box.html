@@ -1,0 +1,31 @@
+<div class="card mb-1">
+    <div class="card-header">
+        <div class="float-start">
+            <a href="{{ url }}">{{ node.exemplar.title }}</a>
+            <span class="text-muted">
+                {{ node.exemplar.culprit|default_if_none:"" }}
+            </span>
+        </div>
+        <div class="float-end text-muted">
+            <span title="events in this node">
+                📎 {{ node.item_count }}
+            </span>
+            /
+            <span title="events in subtree">
+                📁 {{ node.total_item_count }}
+            </span>
+        </div>
+    </div>
+    {% if node.exemplar.subtitle %}
+        <div class="card-body">
+            {{ node.exemplar.subtitle }}
+        </div>
+    {% endif %}
+</div>
+{% if node.children %}
+    <div class="ms-5 mb-3">
+        {% for node, url, children in children %}
+            {% include 'group-box.html' %}
+        {% endfor %}
+    </div>
+{% endif %}

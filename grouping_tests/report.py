@@ -30,18 +30,10 @@ class ProjectReport:
         self._root_dir = parent_dir
         self._events_base_url = events_base_url
         self._current_depth = 0
-        root.visit(self._visit)
 
-    def _visit(self, node: GroupNode, ancestors: List[GroupNode]):
+        root.visit(self._render_node)  # Renders all nodes
 
-        # Every page contains a view of the descendants, so visit children again:
-        descendants = []
-        def collect_descendants(node, ancestors):
-            ancestors = ancestors[1:]  # Skip self
-            descendants.append((
-                3*len(ancestors), descendant_url(node, ancestors), node
-            ))
-        node.visit(collect_descendants)
+    def _render_node(self, node: GroupNode, ancestors: List[GroupNode]):
 
         output_path = self._html_path(node, ancestors)
 
@@ -55,9 +47,21 @@ class ProjectReport:
                 for i, ancestor in enumerate(reversed(ancestors))
             ]),
             'home': (len(ancestors) + 1) * "../",
-            'descendants': descendants[1:],  # Skip self
+            'descendants': self._get_descendants(node, []),  # Skip self
             'events_base_url': self._events_base_url,
         })
+
+    @classmethod
+    def _get_descendants(cls, node, ancestors):
+        child_ancestors = ancestors + [node]
+        return [
+            (
+                child,
+                descendant_url(child, child_ancestors[1:]),
+                cls._get_descendants(child, child_ancestors),
+            )
+            for child in node.children.values()
+        ]
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):
         path = [ancestor.name for ancestor in ancestors] + [node.name]

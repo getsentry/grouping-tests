@@ -30,32 +30,8 @@
 
     {% if descendants %}
         <h2 class="mt-3">Issue Tree</h2>
-        {% for indent, url, node in descendants %}
-            <div class="card {% if indent %}mt-1{% else %}mt-3{% endif %}"
-                style="margin-left: {{ indent }}rem!important">
-                <div class="card-header">
-                    <div class="float-start">
-                        <a href="{{ url }}">{{ node.exemplar.title }}</a>
-                        <span class="text-muted">
-                            {{ node.exemplar.culprit|default_if_none:"" }}
-                        </span>
-                    </div>
-                    <div class="float-end text-muted">
-                        <span title="events in this node">
-                            📎 {{ node.item_count }}
-                        </span>
-                        /
-                        <span title="events in subtree">
-                            📁 {{ node.total_item_count }}
-                        </span>
-                    </div>
-                </div>
-                {% if node.exemplar.subtitle %}
-                    <div class="card-body">
-                        {{ node.exemplar.subtitle }}
-                    </div>
-                {% endif %}
-            </div>
+        {% for node, url, children in descendants %}
+            {% include 'group-box.html' %}
         {% endfor %}
 
         </ul>

@@ -137,7 +137,7 @@ def process_one(task_input):
 
     if not hierarchical_hashes:
         # Prevent events ending up in the project node
-        hierarchical_hashes = ["<NO-HASH>"]
+        hierarchical_hashes = ["NO_HASH"]
 
     # Store lightweight version of event, keep payload in filesystem
     item = extract_event_data(event)

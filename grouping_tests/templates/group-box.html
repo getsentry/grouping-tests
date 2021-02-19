@@ -2,7 +2,12 @@
     <div class="card-header">
         <div class="float-start">
             <a href="{{ url }}">{{ node.exemplar.title }}</a>
-            <span class="text-muted">
+            <span class="text-muted"
+                data-bs-toggle="collapse"
+                data-bs-target="#children-of-{{ node.name }}"
+                aria-expanded="true"
+                aria-controls="children-of-{{ node.name }}"
+            >
                 {{ node.exemplar.culprit|default_if_none:"" }}
             </span>
         </div>
@@ -23,7 +28,7 @@
     {% endif %}
 </div>
 {% if node.children %}
-    <div class="ms-5 mb-3">
+    <div id="children-of-{{ node.name }}" class="collapse show ms-5 mb-3">
         {% for node, url, children in children %}
             {% include 'group-box.html' %}
         {% endfor %}

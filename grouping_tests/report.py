@@ -112,7 +112,10 @@ def _node_diff(from_: GroupNode, to: GroupNode) -> str:
     crash_report2 = _get_crash_report(to)
 
     if crash_report1 and crash_report2:
-        return "".join(unified_diff(crash_report1, crash_report2))
+        return "\n".join(
+            unified_diff(
+                crash_report1.splitlines(1),
+                crash_report2.splitlines(1)))
 
     return ""
 

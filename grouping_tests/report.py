@@ -19,10 +19,11 @@ class HTMLReport:
 
     def __init__(self, parent_dir: Path, metadata, projects: List[str]):
 
-        render_to_file("report.html", parent_dir / "index.html", {
+        _render_to_file("report.html", parent_dir / "index.html", {
             'projects': sorted(projects),
             'metadata': json.dumps(metadata, indent=4)
         })
+
 
 class ProjectReport:
 
@@ -37,31 +38,19 @@ class ProjectReport:
 
         output_path = self._html_path(node, ancestors)
 
-        render_to_file("group-node.html", output_path, {
-            'title': node_title(node),
-            'subtitle': node_subtitle(node),
-            'hash': node_hash(node),
+        _render_to_file("group-node.html", output_path, {
+            'title': _node_title(node),
+            'subtitle': _node_subtitle(node),
+            'hash': _node_hash(node),
             'node': node,
             'ancestors': reversed([
-                ((i+1) * "../", node_title(ancestor))
+                ((i+1) * "../", _node_title(ancestor))
                 for i, ancestor in enumerate(reversed(ancestors))
             ]),
             'home': (len(ancestors) + 1) * "../",
-            'descendants': self._get_descendants(node, []),  # Skip self
+            'descendants': _get_descendants(node, []),  # Skip self
             'events_base_url': self._events_base_url,
         })
-
-    @classmethod
-    def _get_descendants(cls, node, ancestors):
-        child_ancestors = ancestors + [node]
-        return [
-            (
-                child,
-                descendant_url(child, child_ancestors[1:]),
-                cls._get_descendants(child, child_ancestors),
-            )
-            for child in node.children.values()
-        ]
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):
         path = [ancestor.name for ancestor in ancestors] + [node.name]
@@ -69,7 +58,19 @@ class ProjectReport:
         return self._root_dir.joinpath(*path) / "index.html"
 
 
-def render_to_file(template_name: str, output_path: Path, context: dict):
+def _get_descendants(node, ancestors):
+    child_ancestors = ancestors + [node]
+    return [
+        (
+            child,
+            _descendant_url(child, child_ancestors[1:]),
+            _get_descendants(child, child_ancestors),
+        )
+        for child in node.children.values()
+    ]
+
+
+def _render_to_file(template_name: str, output_path: Path, context: dict):
 
     html = render_to_string(template_name, context)
 
@@ -78,27 +79,27 @@ def render_to_file(template_name: str, output_path: Path, context: dict):
         f.write(html)
 
 
-def descendant_url(node, ancestors):
+def _descendant_url(node, ancestors):
     return "/".join(a.name for a in ancestors + [node]) + "/index.html"
 
 
-def is_project(node):
+def _is_project(node):
     return node.name.startswith("project_")
 
 
-def node_title(node):
-    if node.exemplar is None or is_project(node):
+def _node_title(node):
+    if node.exemplar is None or _is_project(node):
         return node.name
 
     return node.exemplar['title']
 
 
-def node_subtitle(node):
-    if node.exemplar is None or is_project(node):
+def _node_subtitle(node):
+    if node.exemplar is None or _is_project(node):
         return None
 
     return node.exemplar['subtitle']
 
 
-def node_hash(node):
-    return None if is_project(node) else node.name
+def _node_hash(node):
+    return None if _is_project(node) else node.name

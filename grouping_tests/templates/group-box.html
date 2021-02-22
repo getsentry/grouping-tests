@@ -21,20 +21,21 @@
             </span>
         </div>
     </div>
-        {% if node.exemplar.subtitle or node_diff %}
-            <div class="card-body">
-                <p>{{ node.exemplar.subtitle }}</p>
+    {% if node.exemplar.subtitle or node_diff %}
+        <div class="card-body">
+            <p>{{ node.exemplar.subtitle }}</p>
 
-                <small>
-                    {% for delta in node_diff %}
-                        <pre
-                            class="border bg-light mb-1 text-{% if delta|first == '+' %}success{%else%}danger{%endif%}"
-                        >{{ delta }}</pre>
-                    {% endfor %}
-                </small>
-        {% endif %}
+            <small>
+                {% for delta in node_diff %}
+                    <pre
+                        class="border bg-light mb-1 text-{% if delta|first == '+' %}success{%else%}danger{%endif%}"
+                    >{{ delta }}</pre>
+                {% endfor %}
+            </small>
         </div>
+    {% endif %}
 </div>
+
 {% if node.children %}
     <div id="children-of-{{ node.name }}" class="collapse show ms-5 mb-3">
         {% for node, url, node_diff, children in children %}

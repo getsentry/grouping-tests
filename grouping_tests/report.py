@@ -50,6 +50,7 @@ class ProjectReport:
             'home': (len(ancestors) + 1) * "../",
             'descendants': _get_descendants(node, []),  # Skip self
             'events_base_url': self._events_base_url,
+            'crash_report': _get_crash_report(node)
         })
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):
@@ -103,3 +104,7 @@ def _node_subtitle(node):
 
 def _node_hash(node):
     return None if _is_project(node) else node.name
+
+
+def _get_crash_report(node):
+    return node.exemplar and node.exemplar.get('crash_report')

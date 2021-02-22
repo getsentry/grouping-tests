@@ -25,6 +25,7 @@ from grouping_tests.groups.base import GroupNode
 from grouping_tests.groups.flat import ListNode
 from grouping_tests.groups.tree import TreeNode
 from grouping_tests.report import HTMLReport, ProjectReport
+from grouping_tests.crash import get_crash_report
 
 
 LOG = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
     project_id = entry.name
 
     # Create a root node for all groups
-    project = group_type(project_id)
+    project = group_type(project_id, process_item)
 
     LOG.info("Project %s: Collecting filenames...", project_id)
     # iglob would be easier on memory, but we want to use the progress bar
@@ -120,7 +121,9 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
             results = pool.imap_unordered(process_one, task_input)
             progress_bar = click.progressbar(results, length=len(filenames))
             with progress_bar:
-                for flat_hashes, hierarchical_hashes, item in progress_bar:
+                for result in progress_bar:
+                    flat_hashes, hierarchical_hashes, event, json_url = result
+                    item = event, json_url
                     project.insert(flat_hashes, hierarchical_hashes, item)
 
     return project
@@ -139,11 +142,21 @@ def process_one(task_input):
         # Prevent events ending up in the project node
         hierarchical_hashes = ["NO_HASH"]
 
-    # Store lightweight version of event, keep payload in filesystem
-    item = extract_event_data(event)
-    item['json_url'] = Path(filename).relative_to(event_dir)
+    json_url = Path(filename).relative_to(event_dir)
 
-    return flat_hashes, hierarchical_hashes, item
+    return flat_hashes, hierarchical_hashes, event, json_url
+
+
+def process_item(data, is_exemplar: bool):
+    """ Upon insertion into the tree, save only necessary event data """
+    event, json_url = data
+    item = extract_event_data(event)
+    item['json_url'] = json_url
+
+    if is_exemplar:
+        item['crash_report'] = get_crash_report(event)
+
+    return item
 
 
 def extract_event_data(event: Event) -> dict:

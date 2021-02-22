@@ -21,15 +21,16 @@
             </span>
         </div>
     </div>
-    {% if node.exemplar.subtitle %}
         <div class="card-body">
             {{ node.exemplar.subtitle }}
+            {% if node_diff %}
+                <pre class="border bg-light">{{ node_diff }}</pre>
+            {% endif %}
         </div>
-    {% endif %}
 </div>
 {% if node.children %}
     <div id="children-of-{{ node.name }}" class="collapse show ms-5 mb-3">
-        {% for node, url, children in children %}
+        {% for node, url, node_diff, children in children %}
             {% include 'group-box.html' %}
         {% endfor %}
     </div>

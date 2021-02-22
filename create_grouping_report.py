@@ -90,7 +90,7 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
                 store_pickle(pickle_dir, project)
 
         LOG.info("Project %s: Saving HTML report...", project_id)
-
+        project.exemplar = None  # HACKish makes sure that project does not display hash, stack trace, etc.
         ProjectReport(project, report_dir, events_base_url)
 
         LOG.info("Project %s: Done.", project_id)

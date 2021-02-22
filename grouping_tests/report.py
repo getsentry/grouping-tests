@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 import json
 import os
+from difflib import unified_diff
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -65,6 +66,7 @@ def _get_descendants(node, ancestors):
         (
             child,
             _descendant_url(child, child_ancestors[1:]),
+            _node_diff(node, child),
             _get_descendants(child, child_ancestors),
         )
         for child in node.children.values()
@@ -89,17 +91,11 @@ def _is_project(node):
 
 
 def _node_title(node):
-    if node.exemplar is None or _is_project(node):
-        return node.name
-
-    return node.exemplar['title']
+    return node.exemplar['title'] if node.exemplar else node.name
 
 
 def _node_subtitle(node):
-    if node.exemplar is None or _is_project(node):
-        return None
-
-    return node.exemplar['subtitle']
+    return node.exemplar and node.exemplar['subtitle']
 
 
 def _node_hash(node):
@@ -108,3 +104,15 @@ def _node_hash(node):
 
 def _get_crash_report(node):
     return node.exemplar and node.exemplar.get('crash_report')
+
+
+def _node_diff(from_: GroupNode, to: GroupNode) -> str:
+    """ What sets this node apart from the other node """
+    crash_report1 = _get_crash_report(from_)
+    crash_report2 = _get_crash_report(to)
+
+    if crash_report1 and crash_report2:
+        return "\n".join(unified_diff(crash_report1, crash_report2))
+
+    return ""
+

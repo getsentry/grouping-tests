@@ -106,16 +106,19 @@ def _get_crash_report(node):
     return node.exemplar and node.exemplar.get('crash_report')
 
 
-def _node_diff(from_: GroupNode, to: GroupNode) -> str:
+def _node_diff(from_: GroupNode, to: GroupNode) -> List[str]:
     """ What sets this node apart from the other node """
     crash_report1 = _get_crash_report(from_)
     crash_report2 = _get_crash_report(to)
 
     if crash_report1 and crash_report2:
-        return "\n".join(
-            unified_diff(
+        return [
+            line for line in unified_diff(
                 crash_report1.splitlines(1),
-                crash_report2.splitlines(1)))
+                crash_report2.splitlines(1)
+            )
+            if line[0] in {"+", "-"} and not line.startswith(("+++", "---"))
+        ]
 
-    return ""
+    return []
 

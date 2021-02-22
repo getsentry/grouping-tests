@@ -2,14 +2,14 @@
     <div class="card-header">
         <div class="float-start">
             <a href="{{ url }}">{{ node.exemplar.title }}</a>
-            <span class="text-muted"
+            <small class="text-muted"
                 data-bs-toggle="collapse"
                 data-bs-target="#children-of-{{ node.name }}"
                 aria-expanded="true"
                 aria-controls="children-of-{{ node.name }}"
             >
                 {{ node.exemplar.culprit|default_if_none:"" }}
-            </span>
+            </small>
         </div>
         <div class="float-end text-muted">
             <span title="events in this node">
@@ -21,11 +21,18 @@
             </span>
         </div>
     </div>
-        <div class="card-body">
-            {{ node.exemplar.subtitle }}
-            {% if node_diff %}
-                <pre class="border bg-light">{{ node_diff }}</pre>
-            {% endif %}
+        {% if node.exemplar.subtitle or node_diff %}
+            <div class="card-body">
+                <p>{{ node.exemplar.subtitle }}</p>
+
+                <small>
+                    {% for delta in node_diff %}
+                        <pre
+                            class="border bg-light mb-1 text-{% if delta|first == '+' %}success{%else%}danger{%endif%}"
+                        >{{ delta }}</pre>
+                    {% endfor %}
+                </small>
+        {% endif %}
         </div>
 </div>
 {% if node.children %}

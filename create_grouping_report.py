@@ -66,9 +66,9 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
         os.makedirs(pickle_dir, exist_ok=True)
 
     with open(config, 'r') as config_file:
-        config = json.load(config_file)
+        config_dict = json.load(config_file)
 
-    report_metadata = write_metadata(report_dir, config)
+    report_metadata = write_metadata(report_dir, config_dict)
 
     group_type = GROUP_TYPES[grouping_mode]
 
@@ -86,12 +86,13 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
 
         if project is None:
             project = generate_project_tree(
-                event_dir, config, group_type, entry, num_workers)
+                event_dir, config_dict, group_type, entry, num_workers)
             if pickle_dir:
                 store_pickle(pickle_dir, project)
 
         LOG.info("Project %s: Saving HTML report...", project_id)
         project.exemplar = None  # HACKish makes sure that project does not display hash, stack trace, etc.
+
         ProjectReport(project, report_dir, events_base_url)
 
         LOG.info("Project %s: Done.", project_id)
@@ -106,7 +107,7 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
     project_id = entry.name
 
     # Create a root node for all groups
-    project = group_type(project_id, process_item)
+    project = group_type(project_id)
 
     LOG.info("Project %s: Collecting filenames...", project_id)
     # iglob would be easier on memory, but we want to use the progress bar
@@ -115,49 +116,52 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
     LOG.info("Project %s: Processing...", project_id)
     with Manager() as manager:
         with manager.Pool(num_workers) as pool:
-            task_input = [  # NOTE: unnecessary data duplication
-                (event_dir, config, project_id, filename)
-                for filename in filenames
-            ]
-            results = pool.imap_unordered(process_one, task_input)
+            processor = EventProcessor(event_dir, config, project_id)
+            results = pool.imap_unordered(processor, filenames)
             progress_bar = click.progressbar(results, length=len(filenames))
             with progress_bar:
                 for result in progress_bar:
-                    flat_hashes, hierarchical_hashes, event, json_url = result
-                    item = event, json_url
+                    flat_hashes, hierarchical_hashes, item = result
                     project.insert(flat_hashes, hierarchical_hashes, item)
+
+            print(f"crash_report_counter = {processor._crash_report_counter}")
 
     return project
 
 
-def process_one(task_input):
-    event_dir, config, project_id, filename = task_input
-    with open(filename, 'r') as file_:
-        event_data = json.load(file_)
-    event_id = event_data['event_id']
-    event = Event(project_id, event_id, group_id=None, data=event_data)
+class EventProcessor:
 
-    flat_hashes, hierarchical_hashes = event.get_hashes(force_config=config)
+    def __init__(self, event_dir, config, project_id):
+        self._event_dir = event_dir
+        self._config = config
+        self._project_id = project_id
+        self._seen = set()
 
-    if not hierarchical_hashes:
-        # Prevent events ending up in the project node
-        hierarchical_hashes = ["NO_HASH"]
+        self._crash_report_counter = 0
 
-    json_url = Path(filename).relative_to(event_dir)
+    def __call__(self, filename):
 
-    return flat_hashes, hierarchical_hashes, event, json_url
+        with open(filename, 'r') as file_:
+            event_data = json.load(file_)
+        event_id = event_data['event_id']
+        event = Event(
+            self._project_id, event_id, group_id=None, data=event_data)
 
+        flat_hashes, hierarchical_hashes = (
+            event.get_hashes(force_config=self._config))
 
-def process_item(data, is_exemplar: bool):
-    """ Upon insertion into the tree, save only necessary event data """
-    event, json_url = data
-    item = extract_event_data(event)
-    item['json_url'] = json_url
+        if not hierarchical_hashes:
+            # Prevent events ending up in the project node
+            hierarchical_hashes = ["NO_HASH"]
 
-    if is_exemplar:
+        item = extract_event_data(event)
+        item['json_url'] = Path(filename).relative_to(self._event_dir)
+
+        # Seems abundant to do this for every event, but it's faster
+        # than synchronising between processes when to generate
         item['crash_report'] = get_crash_report(event)
 
-    return item
+        return flat_hashes, hierarchical_hashes, item
 
 
 def extract_event_data(event: Event) -> dict:
@@ -172,8 +176,9 @@ def extract_event_data(event: Event) -> dict:
 
 
 def write_metadata(report_dir: Path, config: dict):
-
+    from django.utils.timezone import now
     meta = {
+        'generated': str(now()),
         'cli_args': sys.argv,
         'config': config,
         'sentry_version': get_version(),

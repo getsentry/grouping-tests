@@ -17,6 +17,7 @@ from multiprocessing import Manager
 
 from sentry.event_manager import materialize_metadata
 from sentry.eventstore.models import Event
+from sentry import get_version, _get_git_revision
 
 import sentry_sdk
 sentry_sdk.init("")
@@ -175,7 +176,8 @@ def write_metadata(report_dir: Path, config: dict):
     meta = {
         'cli_args': sys.argv,
         'config': config,
-        'grouping_tests_revision': git_revision()
+        'sentry_version': get_version(),
+        'grouping_tests_revision': _get_git_revision(Path(__file__).parent)
     }
 
     with open(report_dir / "meta.json", 'w') as f:
@@ -197,15 +199,6 @@ def store_pickle(pickle_dir: Path, project: GroupNode):
     filename = pickle_dir / f"{project.name}.pickle"
     with open(filename, 'wb') as f:
         pickle.dump(project, file=f)
-
-
-def git_revision():
-    git = Path(__file__).parent / ".git"
-    with open(git /  "HEAD") as f:
-        head = f.readline().strip().split(": ")[1]
-    with open(git / head) as f:
-
-        return f.readline().strip()
 
 
 if __name__ == "__main__":

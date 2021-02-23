@@ -1,41 +1,52 @@
-<div class="card mb-1">
-    <div class="card-header">
-        <div class="float-start">
-            <a href="{{ url }}">{{ node.exemplar.title }}</a>
-            <small class="text-muted"
-                data-bs-toggle="collapse"
-                data-bs-target="#children-of-{{ node.name }}"
-                aria-expanded="true"
-                aria-controls="children-of-{{ node.name }}"
-            >
-                {{ node.exemplar.culprit|default_if_none:"" }}
-            </small>
-        </div>
-        <div class="float-end text-muted">
-            <span title="events in this node">
-                📎 {{ node.item_count }}
-            </span>
-            /
-            <span title="events in subtree">
-                📁 {{ node.total_item_count }}
-            </span>
-        </div>
+<div class="clearfix">
+    <div class="float-start">
+        <a
+            href="#"
+            class="btn collapser"
+            data-bs-toggle="collapse"
+            data-bs-target="#children-of-{{ node.name }}"
+            data-bs-parent="#descendants"
+            aria-expanded="true"
+            aria-controls="children-of-{{ node.name }}"
+            {% if not node.children %}disabled="disabled" style="color:white"{% endif %}
+        >
+            <i class="bi-chevron-right"></i>
+        </a>
     </div>
-    {% if node.exemplar.subtitle or node_diff %}
-        <div class="card-body">
-            <p>{{ node.exemplar.subtitle }}</p>
-
-            {% if node_diff %}
-                {% with modal_class_name="sibling-diff" modal_name='Grouping Diff' modal_id='sibling_diff_'|add:node.name modal_data=node_diff modal_size='fullscreen' %}
-                    {% include 'modal.html' %}
-                {% endwith %}
-            {% endif %}
+    <div class="card mb-1">
+        <div class="card-header">
+            <div class="float-start">
+                <a href="{{ url }}">{{ node.exemplar.title }}</a>
+                <small class="text-muted">
+                    {{ node.exemplar.culprit|default_if_none:"" }}
+                </small>
+            </div>
+            <div class="float-end text-muted">
+                <span title="events in this node">
+                    📎 {{ node.item_count }}
+                </span>
+                /
+                <span title="events in subtree">
+                    📁 {{ node.total_item_count }}
+                </span>
+            </div>
         </div>
-    {% endif %}
+        {% if node.exemplar.subtitle or node_diff %}
+            <div class="card-body">
+                <p>{{ node.exemplar.subtitle }}</p>
+
+                {% if node_diff %}
+                    {% with modal_class_name="sibling-diff" modal_name='Grouping Diff' modal_id='sibling_diff_'|add:node.name modal_data=node_diff modal_size='fullscreen' %}
+                        {% include 'modal.html' %}
+                    {% endwith %}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
 </div>
 
 {% if node.children %}
-    <div id="children-of-{{ node.name }}" class="collapse show ms-5 mb-3">
+    <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3">
         {% for node, url, node_diff, children in children %}
             {% include 'group-box.html' %}
         {% endfor %}

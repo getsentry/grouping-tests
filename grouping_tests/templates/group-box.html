@@ -1,17 +1,15 @@
 <div class="clearfix">
     <div class="float-start">
-        <a
-            href="#"
+        <span
             class="btn collapser"
             data-bs-toggle="collapse"
             data-bs-target="#children-of-{{ node.name }}"
-            data-bs-parent="#descendants"
             aria-expanded="true"
             aria-controls="children-of-{{ node.name }}"
             {% if not node.children %}disabled="disabled" style="color:white"{% endif %}
         >
-            <i class="bi-chevron-right"></i>
-        </a>
+            <i class="bi-chevron-down"></i>
+    </span>
     </div>
     <div class="card mb-1">
         <div class="card-header">
@@ -46,7 +44,7 @@
 </div>
 
 {% if node.children %}
-    <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3">
+    <div id="children-of-{{ node.name }}" class="collapse show ms-5 mb-3">
         {% for node, url, node_diff, children in children %}
             {% include 'group-box.html' %}
         {% endfor %}

@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from sentry.eventstore.models import Event
 from sentry.lang.native.applecrashreport import AppleCrashReport
@@ -21,7 +22,7 @@ def get_crash_report(event: Event) -> str:
 
 def dump_variants(config, event: Event) -> str:
     # Copied from sentry/tests/sentry/grouping/test_variants.py
-    rv = []
+    rv: List[str] = []
     for (key, value) in sorted(
         event.get_grouping_variants(force_config=config).items()
     ):

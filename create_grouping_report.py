@@ -156,7 +156,7 @@ class EventProcessor:
         # Seems abundant to do this for every event, but it's faster
         # than synchronising between processes when to generate
         item['crash_report'] = get_crash_report(event)
-        item['dump_variants'] = dump_variants(event)  # FIXME: Use current config for this
+        item['dump_variants'] = dump_variants(self._config, event)
 
         return flat_hashes, hierarchical_hashes, item
 

@@ -19,10 +19,12 @@ def get_crash_report(event: Event) -> str:
     )
 
 
-def dump_variants(event: Event) -> str:
+def dump_variants(config, event: Event) -> str:
     # Copied from sentry/tests/sentry/grouping/test_variants.py
     rv = []
-    for (key, value) in sorted(event.get_grouping_variants().items()):
+    for (key, value) in sorted(
+        event.get_grouping_variants(force_config=config).items()
+    ):
         if rv:
             rv.append("-" * 74)
         rv.append("%s:" % key)

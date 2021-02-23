@@ -69,4 +69,30 @@
         </ul>
     {% endif %}
         </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.open-sibling-diff').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const button = event.target;
+
+                const modal_selector = button.dataset.bsTarget;
+
+                const modal = document.querySelector(modal_selector);
+                const source = modal.querySelector("pre").innerHTML;
+
+                const target = modal.querySelector(modal_selector+"-data-parent");
+
+                var diffHtml = Diff2Html.html(source, {
+                    drawFileList: false,
+                    matching: 'lines',
+                    outputFormat: 'side-by-side',
+                });
+                target.innerHTML = diffHtml;
+            });
+        });
+
+    });
+</script>
+
 {% endblock %}

@@ -111,11 +111,14 @@ def _node_diff(from_: GroupNode, to: GroupNode) -> str:
     dv2 = _get_field(to, 'dump_variants')
 
     if dv1 and dv2:
-        return "diff --git a/variants b/variants\n"+"".join(unified_diff(
+        diff = "".join(unified_diff(
                 dv1.splitlines(1),
                 dv2.splitlines(1),
             )
         )
+        if diff:
+            # diff2html seems to require this header
+            return "diff --git a/variants b/variants\n" + diff
 
     return ""
 

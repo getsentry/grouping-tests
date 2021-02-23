@@ -24,13 +24,12 @@
     {% if node.exemplar.subtitle or node_diff %}
         <div class="card-body">
             <p>{{ node.exemplar.subtitle }}</p>
-            <button
-                class="show-diff btn btn-outline-primary"
-                data-source="node-diff-{{ node.name }}"
-                data-target="diff-viewer-{{ node.name }}"
-            >Show grouping diff</button>
-            <pre id="node-diff-{{ node.name }}" class="visually-hidden">{{ node_diff }}</pre>
-            <div id="diff-viewer-{{ node.name }}"></div>
+
+            {% if node_diff %}
+                {% with modal_class_name="sibling-diff" modal_name='Grouping Diff' modal_id='sibling_diff_'|add:node.name modal_data=node_diff modal_size='fullscreen' %}
+                    {% include 'modal.html' %}
+                {% endwith %}
+            {% endif %}
         </div>
     {% endif %}
 </div>
@@ -42,24 +41,3 @@
         {% endfor %}
     </div>
 {% endif %}
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.show-diff').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const button = event.target;
-
-                const source = document.getElementById(button.dataset['source']);
-                const target = document.getElementById(button.dataset['target']);
-
-                var diffHtml = Diff2Html.html(source.innerHTML, {
-                    drawFileList: false,
-                    matching: 'lines',
-                    outputFormat: 'side-by-side',
-                });
-                target.innerHTML = diffHtml;
-            });
-        });
-
-    });
-</script>

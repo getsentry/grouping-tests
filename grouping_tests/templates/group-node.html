@@ -28,14 +28,22 @@
 
     {% if hash %}<p class="text-muted">Hash: {{ hash }}</p>{% endif %}
 
-    {% if node.exemplar.crash_report %}
-        <a
-            href="#crash-report"
-            data-bs-toggle="collapse"
-            data-bs-target="#crash-report"
-        >Crash Report</a>
-        <pre id="crash-report" class="collapse border bg-light">{{ node.exemplar.crash_report }}</pre>
+    {% if node.exemplar %}
+        <div class="btn-group btn-group-sm" role="group">
+            {% with modal_name='Crash Report' modal_id='crash_report' modal_data=node.exemplar.crash_report %}
+                {% include 'modal.html' %}
+            {% endwith %}
+
+            {% with modal_name='Variants' modal_id='dump_variants' modal_data=node.exemplar.dump_variants %}
+                {% include 'modal.html' %}
+            {% endwith %}
+            <a href="{{ events_base_url }}/{{ node.exemplar.json_url }}" class="btn btn-outline-primary">Event Payload</a>
+        </div>
     {% endif %}
+
+    </p>
+
+
 
     {% if descendants %}
         <h2 class="mt-3">Issue Tree</h2>

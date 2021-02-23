@@ -21,13 +21,9 @@
             </span>
         </div>
     </div>
-    {% if node.exemplar.subtitle or node_diff %}
+    {% if node.exemplar.subtitle %}
         <div class="card-body">
             <p>{{ node.exemplar.subtitle }}</p>
-
-            <small>
-                <pre class="border bg-light">{{ node_diff }}</pre>
-            </small>
         </div>
     {% endif %}
 </div>

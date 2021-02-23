@@ -26,11 +26,7 @@
             <p>{{ node.exemplar.subtitle }}</p>
 
             <small>
-                {% for delta in node_diff %}
-                    <pre
-                        class="border bg-light mb-1 text-{% if delta|first == '+' %}success{%else%}danger{%endif%}"
-                    >{{ delta }}</pre>
-                {% endfor %}
+                <pre class="border bg-light">{{ node_diff }}</pre>
             </small>
         </div>
     {% endif %}

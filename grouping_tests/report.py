@@ -51,7 +51,6 @@ class ProjectReport:
             'home': (len(ancestors) + 1) * "../",
             'descendants': _get_descendants(node, []),  # Skip self
             'events_base_url': self._events_base_url,
-            'crash_report': _get_crash_report(node)
         })
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):
@@ -102,23 +101,21 @@ def _node_hash(node):
     return None if _is_project(node) else node.name
 
 
-def _get_crash_report(node):
-    return node.exemplar and node.exemplar.get('crash_report')
+def _get_field(node, name):
+    return node.exemplar and node.exemplar.get(name)
 
 
-def _node_diff(from_: GroupNode, to: GroupNode) -> List[str]:
+def _node_diff(from_: GroupNode, to: GroupNode) -> str:
     """ What sets this node apart from the other node """
-    crash_report1 = _get_crash_report(from_)
-    crash_report2 = _get_crash_report(to)
+    dv1 = _get_field(from_, 'dump_variants')
+    dv2 = _get_field(to, 'dump_variants')
 
-    if crash_report1 and crash_report2:
-        return [
-            line for line in unified_diff(
-                crash_report1.splitlines(1),
-                crash_report2.splitlines(1)
+    if dv1 and dv2:
+        return "\n".join(unified_diff(
+                dv1.splitlines(1),
+                dv2.splitlines(1)
             )
-            if line[0] in {"+", "-"} and not line.startswith(("+++", "---"))
-        ]
+        )
 
-    return []
+    return ""
 

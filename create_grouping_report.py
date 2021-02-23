@@ -26,7 +26,7 @@ from grouping_tests.groups.base import GroupNode
 from grouping_tests.groups.flat import ListNode
 from grouping_tests.groups.tree import TreeNode
 from grouping_tests.report import HTMLReport, ProjectReport
-from grouping_tests.crash import get_crash_report
+from grouping_tests.crash import get_crash_report, dump_variants
 
 
 LOG = logging.getLogger(__name__)
@@ -124,8 +124,6 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
                     flat_hashes, hierarchical_hashes, item = result
                     project.insert(flat_hashes, hierarchical_hashes, item)
 
-            print(f"crash_report_counter = {processor._crash_report_counter}")
-
     return project
 
 
@@ -136,8 +134,6 @@ class EventProcessor:
         self._config = config
         self._project_id = project_id
         self._seen = set()
-
-        self._crash_report_counter = 0
 
     def __call__(self, filename):
 
@@ -160,6 +156,7 @@ class EventProcessor:
         # Seems abundant to do this for every event, but it's faster
         # than synchronising between processes when to generate
         item['crash_report'] = get_crash_report(event)
+        item['dump_variants'] = dump_variants(event)  # FIXME: Use current config for this
 
         return flat_hashes, hierarchical_hashes, item
 

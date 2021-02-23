@@ -28,13 +28,13 @@
 
     {% if hash %}<p class="text-muted">Hash: {{ hash }}</p>{% endif %}
 
-    {% if crash_report %}
+    {% if node.exemplar.crash_report %}
         <a
             href="#crash-report"
             data-bs-toggle="collapse"
             data-bs-target="#crash-report"
         >Crash Report</a>
-        <pre id="crash-report" class="collapse border bg-light">{{ crash_report }}</pre>
+        <pre id="crash-report" class="collapse border bg-light">{{ node.exemplar.crash_report }}</pre>
     {% endif %}
 
     {% if descendants %}

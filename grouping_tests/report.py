@@ -8,6 +8,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from grouping_tests.groups.base import GroupNode
+from grouping_tests.charts import node_to_plotly
 
 
 # HACK: add template dir to Django settings
@@ -51,6 +52,7 @@ class ProjectReport:
             'home': (len(ancestors) + 1) * "../",
             'descendants': _get_descendants(node, []),  # Skip self
             'events_base_url': self._events_base_url,
+            'tree_chart_data': json.dumps(node_to_plotly(node)),
         })
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):

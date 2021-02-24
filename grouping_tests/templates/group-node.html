@@ -40,17 +40,17 @@
             <a href="{{ events_base_url }}/{{ node.exemplar.json_url }}" class="btn btn-outline-primary">Event Payload</a>
         </div>
     {% endif %}
-
     </p>
 
 
 
     {% if descendants %}
-        <div class="row mt-3">
-            <h2 class="col">Issue Tree</h2>
-            <div class="col text-end" style="line-height: 3rem;">
-                <a href="#" id="collapse-all">Expand / collapse all</a>
-            </div>
+        <h2 class="mt-5">Issue Tree</h2>
+
+        <div id="tree-chart"></div>
+
+        <div class="text-end" style="line-height: 3rem;">
+            <a href="#" id="collapse-all">Expand / collapse all</a>
         </div>
         <div>
             {% for node, url, node_diff, children in descendants %}
@@ -120,6 +120,21 @@
             });
         });
 
+        // Tree chart
+        const data = {{ tree_chart_data|safe }};
+        Object.assign(data, {
+            type: "sunburst",
+            outsidetextfont: {size: 20, color: "#377eb8"},
+            leaf: {opacity: 0.4},
+            marker: {line: {width: 2}},
+            hoverinfo: "none",
+        });
+        const layout = {
+            margin: {l: 0, r: 0, b: 0, t: 0},
+            width: 500,
+            height: 500
+        };
+        Plotly.newPlot('tree-chart', [data], layout, {responsive: true});
     });
 </script>
 

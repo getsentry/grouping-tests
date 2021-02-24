@@ -12,7 +12,7 @@ from grouping_tests.groups.base import GroupNode
 
 # HACK: add template dir to Django settings
 settings.TEMPLATES[0]['DIRS'] = (
-    settings.TEMPLATES[0]['DIRS'] + [Path(__file__).parent / "templates"]
+    list(settings.TEMPLATES[0]['DIRS']) + [Path(__file__).parent / "templates"]
 )
 
 

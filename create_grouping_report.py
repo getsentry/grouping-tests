@@ -121,8 +121,9 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
             progress_bar = click.progressbar(results, length=len(filenames))
             with progress_bar:
                 for result in progress_bar:
-                    flat_hashes, hierarchical_hashes, item = result
-                    project.insert(flat_hashes, hierarchical_hashes, item)
+                    if result is not None:
+                        flat_hashes, hierarchical_hashes, item = result
+                        project.insert(flat_hashes, hierarchical_hashes, item)
 
     return project
 
@@ -136,7 +137,13 @@ class EventProcessor:
         self._seen = set()
 
     def __call__(self, filename):
+        try:
+            return self._process(filename)
+        except Exception as e:
+            LOG.warning("Exception occured while processing event %s", filename)
+            LOG.exception(e)
 
+    def _process(self, filename):
         with open(filename, 'r') as file_:
             event_data = json.load(file_)
         event_id = event_data['event_id']

@@ -62,7 +62,7 @@
     {% endif %}
 
     {% if node.items %}
-        <h2 class="mt-3">Events ({{ node.items|length }})</h2>
+        <h2 class="mt-5">Events ({{ node.items|length }})</h2>
         <ul class="list-group">
             {% for event in node.items %}
                 <li class="list-group-item">
@@ -105,9 +105,11 @@
                 const modal_selector = button.dataset.bsTarget;
 
                 const modal = document.querySelector(modal_selector);
-                const source = modal.querySelector("pre").innerHTML;
+                const source_container = modal.querySelector("pre");
+                const source = source_container.innerHTML;
+                source_container.className += " d-none"
 
-                const target = modal.querySelector(modal_selector+"-data-parent");
+                const target = modal.querySelector(modal_selector+"-dynamic-content");
 
                 var diffHtml = Diff2Html.html(source, {
                     drawFileList: false,

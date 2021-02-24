@@ -61,7 +61,7 @@ class ProjectReport:
 
 def _get_descendants(node, ancestors):
     child_ancestors = ancestors + [node]
-    return [
+    children = [
         (
             child,
             _descendant_url(child, child_ancestors[1:]),
@@ -70,6 +70,10 @@ def _get_descendants(node, ancestors):
         )
         for child in node.children.values()
     ]
+
+    children.sort(key= lambda t: _node_title(t[0]))
+
+    return children
 
 
 def _render_to_file(template_name: str, output_path: Path, context: dict):
@@ -118,7 +122,7 @@ def _node_diff(from_: GroupNode, to: GroupNode) -> str:
         )
         if diff:
             # diff2html seems to require this header
-            return "diff --git a/variants b/variants\n" + diff
+            return f"diff --git a/{from_.name} b/{to.name}\n{diff}"
 
     return ""
 

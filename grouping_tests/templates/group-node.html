@@ -46,10 +46,12 @@
 
 
     {% if descendants %}
-        <h2 class="mt-3">Issue Tree</h2>
-        <p class="text-end">
-            <button class="btn btn-outline-secondary" id="collapse-all">Expand / collapse all</button>
-        </p>
+        <div class="row mt-3">
+            <h2 class="col">Issue Tree</h2>
+            <div class="col text-end" style="line-height: 3rem;">
+                <a href="#" id="collapse-all">Expand / collapse all</a>
+            </div>
+        </div>
         <div>
             {% for node, url, node_diff, children in descendants %}
                 {% include 'group-box.html' %}

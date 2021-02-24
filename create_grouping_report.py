@@ -1,4 +1,6 @@
 # prelude of careful imports so django app is correctly initialized
+import os
+os.environ['SENTRY_SKIP_SERVICE_VALIDATION'] = "yes"
 from sentry.runner import configure
 configure()
 

@@ -47,9 +47,10 @@
     {% if descendants %}
         <h2 class="mt-5">Issue Tree</h2>
 
-        <svg id="tree-chart" width="500" height="300"></svg>
-
-        <div class="text-end" style="line-height: 3rem;">
+        <div>
+            <svg id="tree-chart"></svg>
+        </div>
+        <div class="text-end mt-5" style="line-height: 3rem;">
             <a href="#" id="collapse-all">Expand / collapse all</a>
         </div>
         <div>
@@ -128,47 +129,51 @@
 
         const svg = document.getElementById('tree-chart');
         const width = parseInt(svg.parentElement.clientWidth);
-        svg.setAttribute("width", width);
 
-        var partitionLayout = d3.partition().size([width, 300]);
+        const layerHeight = 40;
+        const height = root.height*layerHeight;
+        svg.setAttribute("width", width);
+        svg.setAttribute("height", height);
+
+        var partitionLayout = d3.partition().size([width, height]);
 
         partitionLayout(root);
 
         var depthScale = d3
-        .scaleOrdinal()
-        .range(["#5EAFC6", "#FE9922", "#93c464", "#75739F"]);
+            .scaleOrdinal()
+            .range(["#5EAFC6", "#FE9922", "#93c464", "#75739F"]);
 
         const nodes = d3
-        .select(svg)
-        .selectAll("g")
-        .data(root.descendants())
-        .enter()
-        .append("g")
-        .attr("transform", function (d) {
-            return "translate(" + [d.x0, d.y0] + ")";
+            .select(svg)
+            .selectAll("g")
+            .data(root.descendants())
+            .enter()
+            .append("g")
+            .attr("transform", function (d) {
+                return "translate(" + [d.x0, d.y0] + ")";
         });
 
         const anchors = nodes.append("a").attr("href", (d) => d.data.href);
 
         anchors
-        .append("rect")
-        .attr("width", (d) => {
-            const w = d.x1 - d.x0;
-            if (w == 0) {
-            console.log(d);
-            }
-            return w;
-        })
-        .attr("height", (d) => d.y1 - d.y0)
-        .style("fill", (d) => depthScale(d.depth))
-        .style("stroke", "white");
+            .append("rect")
+            .attr("width", (d) => {
+                const w = d.x1 - d.x0;
+                if (w == 0) {
+                console.log(d);
+                }
+                return w;
+            })
+            .attr("height", (d) => d.y1 - d.y0)
+            .style("fill", (d) => depthScale(d.depth))
+            .style("stroke", "white");
 
         anchors
-        .append("text")
-        .attr("dx", 4)
-        .attr("dy", 20)
-        .text((d) => d.data.name)
-        .style("fill", "white");
+            .append("text")
+            .attr("dx", 8)
+            .attr("dy", 22)
+            .text((d) => d.data.name)
+            .style("fill", "white");
     });
 </script>
 

@@ -47,7 +47,7 @@
     {% if descendants %}
         <h2 class="mt-5">Issue Tree</h2>
 
-        <div id="tree-chart"></div>
+        <svg id="tree-chart" width="500" height="300"></svg>
 
         <div class="text-end" style="line-height: 3rem;">
             <a href="#" id="collapse-all">Expand / collapse all</a>
@@ -121,20 +121,54 @@
         });
 
         // Tree chart
+        // Inspired by https://livebook.manning.com/book/d3js-in-action-second-edition/chapter-6/v-6/38
+
         const data = {{ tree_chart_data|safe }};
-        Object.assign(data, {
-            type: "sunburst",
-            outsidetextfont: {size: 20, color: "#377eb8"},
-            leaf: {opacity: 0.4},
-            marker: {line: {width: 2}},
-            hoverinfo: "none",
+        var root = d3.hierarchy(data).sum((d) => d.item_count);
+
+        const svg = document.getElementById('tree-chart');
+        const width = parseInt(svg.parentElement.clientWidth);
+        svg.setAttribute("width", width);
+
+        var partitionLayout = d3.partition().size([width, 300]);
+
+        partitionLayout(root);
+
+        var depthScale = d3
+        .scaleOrdinal()
+        .range(["#5EAFC6", "#FE9922", "#93c464", "#75739F"]);
+
+        const nodes = d3
+        .select(svg)
+        .selectAll("g")
+        .data(root.descendants())
+        .enter()
+        .append("g")
+        .attr("transform", function (d) {
+            return "translate(" + [d.x0, d.y0] + ")";
         });
-        const layout = {
-            margin: {l: 0, r: 0, b: 0, t: 0},
-            width: 500,
-            height: 500
-        };
-        Plotly.newPlot('tree-chart', [data], layout, {displayModeBar: false});
+
+        const anchors = nodes.append("a").attr("href", (d) => d.data.href);
+
+        anchors
+        .append("rect")
+        .attr("width", (d) => {
+            const w = d.x1 - d.x0;
+            if (w == 0) {
+            console.log(d);
+            }
+            return w;
+        })
+        .attr("height", (d) => d.y1 - d.y0)
+        .style("fill", (d) => depthScale(d.depth))
+        .style("stroke", "white");
+
+        anchors
+        .append("text")
+        .attr("dx", 4)
+        .attr("dy", 20)
+        .text((d) => d.data.name)
+        .style("fill", "white");
     });
 </script>
 

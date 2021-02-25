@@ -8,7 +8,6 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from grouping_tests.groups.base import GroupNode
-from grouping_tests.charts import node_to_plotly
 
 
 # HACK: add template dir to Django settings
@@ -52,7 +51,7 @@ class ProjectReport:
             'home': (len(ancestors) + 1) * "../",
             'descendants': _get_descendants(node, []),  # Skip self
             'events_base_url': self._events_base_url,
-            'tree_chart_data': json.dumps(node_to_plotly(node)),
+            'tree_chart_data': json.dumps(_node_to_d3(node)),
         })
 
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):
@@ -128,3 +127,22 @@ def _node_diff(from_: GroupNode, to: GroupNode) -> str:
 
     return ""
 
+
+def _node_to_d3(node: GroupNode, ancestors=None) -> dict:
+    """ Convert node to d3 format for easy chart rendering """
+
+    if ancestors is None:
+        ancestors = []
+
+    children = [
+        _node_to_d3(child, ancestors + [node])
+        for child in node.children.values()
+    ]
+    children.sort(key=lambda d: d['name'])
+
+    return {
+        "name": _node_title(node),
+        "href": _descendant_url(node, ancestors[1:]) if ancestors else None,
+        "item_count": node.item_count,
+        "children": children,
+    }

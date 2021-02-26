@@ -11,7 +11,9 @@
                         aria-controls="children-of-{{ node.name }}"
                         style="margin-left: -.5rem;"
                     >
-                        <i class="bi-chevron-right"></i>
+                        <span class="text-muted">
+                            <i class="bi-chevron-right"></i>
+                        </span>
                     </span>
                 {% endif %}
                 <a href="{{ url }}">{{ node.exemplar.title }}</a>

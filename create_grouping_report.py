@@ -119,7 +119,7 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
     with Manager() as manager:
         with manager.Pool(num_workers) as pool:
             processor = EventProcessor(event_dir, config, project_id)
-            results = pool.imap_unordered(processor, filenames)
+            results = map_fn(pool, num_workers)(processor, filenames)
             progress_bar = click.progressbar(results, length=len(filenames))
             with progress_bar:
                 for result in progress_bar:
@@ -128,6 +128,14 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
                         project.insert(flat_hashes, hierarchical_hashes, item)
 
     return project
+
+
+def map_fn(pool, num_workers):
+    if num_workers == 1:
+        # Keep everything in this thread, useful for debugging
+        return map
+
+    return pool.imap_unordered
 
 
 class EventProcessor:
@@ -171,12 +179,14 @@ class EventProcessor:
 
 
 def extract_event_data(event: Event) -> dict:
-    title, *subtitle = event.title.split(": ")
+    title, *tail = event.title.split(": ", 1)
+
+    subtitle = tail[0] if tail else event.data.get('metadata', {}).get('value')
 
     return {
         'event_id': event.event_id,
         'title': title,
-        'subtitle': ": ".join(subtitle),
+        'subtitle': subtitle,
         'culprit': event.culprit
     }
 

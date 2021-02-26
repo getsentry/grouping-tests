@@ -1,19 +1,19 @@
 <div class="clearfix">
-    <div class="float-start">
-        <span
-            class="btn collapser"
-            data-bs-toggle="collapse"
-            data-bs-target="#children-of-{{ node.name }}"
-            aria-expanded="true"
-            aria-controls="children-of-{{ node.name }}"
-            {% if not node.children %}disabled="disabled" style="color:white"{% endif %}
-        >
-            <i class="bi-chevron-down"></i>
-    </span>
-    </div>
     <div class="card mb-1">
         <div class="card-header">
             <div class="float-start">
+                {% if node.children %}
+                    <span
+                        class="collapser"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#children-of-{{ node.name }}"
+                        aria-expanded="true"
+                        aria-controls="children-of-{{ node.name }}"
+                        style="margin-left: -.5rem;"
+                    >
+                        <i class="bi-chevron-down"></i>
+                    </span>
+                {% endif %}
                 <a href="{{ url }}">{{ node.exemplar.title }}</a>
                 <small class="text-muted">
                     {{ node.exemplar.culprit|default_if_none:"" }}

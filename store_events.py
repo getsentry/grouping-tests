@@ -7,7 +7,6 @@ import click
 from multiprocessing import Manager
 import sys
 import json
-import textwrap
 import time
 from pathlib import Path
 import os
@@ -17,6 +16,8 @@ from sentry.eventstore.models import Event
 
 import sentry_sdk
 sentry_sdk.init("")
+
+from grouping_tests.utils import event_path
 
 
 @click.command()
@@ -70,18 +71,10 @@ def fetch_and_store(line):
 
 
 def store(project_id, event_id, node, output_dir: Path):
-    output_path = output_dir / f"project_{project_id}" / event_path(event_id)
+    output_path = output_dir / f"project_{project_id}" / event_path(event_id, ".json")
     os.makedirs(output_path.parent, exist_ok=True)
     with open(output_path, 'w') as output_file:
         json.dump(node, output_file)
-
-
-def event_path(event_id: str, prefix_length=2, num_levels=2) -> Path:
-    """ Spread out files by chopping up the event ID """
-    id_parts = textwrap.wrap(event_id, prefix_length)
-    target_dir = Path().joinpath(*id_parts[:num_levels])
-
-    return target_dir / f"event_{event_id}.json"
 
 
 if __name__ == "__main__":

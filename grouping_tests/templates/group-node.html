@@ -43,11 +43,12 @@
 
     {% if descendants %}
         <h2 class="mt-5">Issue Tree</h2>
-
         <div>
             <svg id="tree-chart"></svg>
         </div>
-        <div class="text-end mt-5" style="line-height: 3rem;">
+
+        <h2 class="mt-5">Issues</h2>
+        <div class="text-end" style="line-height: 3rem;">
             <a href="#" id="collapse-all">Expand / collapse all</a>
         </div>
         <div>
@@ -128,7 +129,7 @@
         const width = parseInt(svg.parentElement.clientWidth);
 
         const layerHeight = 40;
-        const height = root.height*layerHeight;
+        const height = (root.height + 1)*layerHeight;
         svg.setAttribute("width", width);
         svg.setAttribute("height", height);
 
@@ -136,9 +137,19 @@
 
         partitionLayout(root);
 
-        var depthScale = d3
-            .scaleOrdinal()
-            .range(["#5EAFC6", "#FE9922", "#93c464", "#75739F"]);
+        const colors = ["#5EAFC6", "#FE9922", "#93c464", "#75739F"];
+        var colorIndex = 0;
+        function color(node) {
+            var rv
+            if(node.parent && node.parent.color && node.parent.children.length == 1) {
+                rv = node.parent.color
+            } else {
+                rv = colors[colorIndex++ % colors.length];
+            }
+
+            node.color = rv;
+            return rv;
+        }
 
         const nodes = d3
             .select(svg)
@@ -162,13 +173,13 @@
                 return w;
             })
             .attr("height", (d) => d.y1 - d.y0)
-            .style("fill", (d) => depthScale(d.depth))
+            .style("fill", color)
             .style("stroke", "white");
 
         anchors
             .append("text")
             .attr("dx", 8)
-            .attr("dy", 22)
+            .attr("dy", 25)
             .text((d) => d.data.name)
             .style("fill", "white");
     });

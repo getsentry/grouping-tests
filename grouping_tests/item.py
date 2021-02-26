@@ -11,8 +11,8 @@ class EventItem(UserDict):
 
     def __init__(self, event: Event, root_dir: Path):
         super(EventItem, self).__init__(_extract_event_data(event))
-        self.on_disk = DiskStore(root_dir / event_path(event.event_id))
-
+        self.data_path =  event_path(event.event_id)
+        self.on_disk = DiskStore(root_dir / self.data_path)
 
 class DiskStore:
 

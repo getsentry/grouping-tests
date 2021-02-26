@@ -62,13 +62,22 @@
 
     {% if node.items %}
         <h2 class="mt-5">Events ({{ node.items|length }})</h2>
-        <ul class="list-group">
+        <ul class="list-group event-list">
             {% for event in node.items %}
-                <li class="list-group-item">
-                    <a href="{{ events_base_url }}/{{ event.json_url }}" class="font-monospace">
-                        {{ event.event_id }}</a>:
-                    <span class="text-muted">{{ event.title }}{% if event.subtitle %}:
-                        {{ event.subtitle }}{% endif %}</span>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <a href="{{ events_base_url }}/{{ event.json_url }}" class="font-monospace">
+                            {{ event.event_id }}</a>:
+                        <span class="text-muted">{{ event.title }}{% if event.subtitle %}:
+                            {{ event.subtitle }}{% endif %}</span>
+
+                    </span>
+                    <span class="event-tools">
+                        <a href="{{ home }}/event_data/{{ event.data_path }}/dump_variants.txt"
+                           class="" title="Variants"><i class="bi-card-text"></i></a>
+
+                        <a href="#" class="compare-events" title="Compare"><i class="bi-file-diff"></i></a>
+                    </span>
 
                 </li>
             {% endfor %}

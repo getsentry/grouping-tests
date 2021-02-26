@@ -18,6 +18,16 @@
       /* diff2html tweaks */
       .d2h-file-header { display: none; }
 
+      .event-list .list-group-item .event-tools a {
+        display: none;
+      }
+      .event-list .list-group-item .event-tools a.selected {
+        display: inline;
+      }
+      .event-list .list-group-item:hover .event-tools a {
+        display: inline;
+      }
+
     </style>
 
     <title>{% block title %}{% endblock %}</title>

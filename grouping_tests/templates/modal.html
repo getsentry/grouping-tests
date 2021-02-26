@@ -1,5 +1,10 @@
 
-<a class="btn btn-outline-primary open-{{ modal_class_name }}" href="#{{ modal_id }}" data-bs-toggle="modal" data-bs-target="#{{ modal_id }}">{{ modal_name }}</a>
+<button
+    class="btn btn-outline-primary open-{{ modal_class_name }}"
+    {% if not modal_data %}disabled="disabled"{% endif %}
+    data-bs-toggle="modal" data-bs-target="#{{ modal_id }}"
+>{{ modal_name }}
+</button>
 
 <!-- Modal -->
 <div class="modal fade {{ modal_class_name }}" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_id }}Label" aria-hidden="true">

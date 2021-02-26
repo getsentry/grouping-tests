@@ -1,5 +1,6 @@
 import json
-from typing import List
+import logging
+from typing import List, Optional
 
 from sentry.eventstore.models import Event
 from sentry.lang.native.applecrashreport import AppleCrashReport
@@ -7,7 +8,19 @@ from sentry.utils.safe import get_path
 from sentry.grouping.component import GroupingComponent
 
 
-def get_crash_report(event: Event) -> str:
+LOG = logging.getLogger(__name__)
+
+
+def get_crash_report(event: Event) -> Optional[str]:
+    """ Return None if crash report fails. """
+    try:
+        return _get_crash_report(event)
+    except Exception as e:
+        LOG.warn("AppleCrashReport failed for event %s with exception %s", event.event_id, e)
+        return None
+
+
+def _get_crash_report(event: Event) -> str:
     # Copied from sentry/api/endpoints/event_apple_crash_report.py
     return str(
         AppleCrashReport(
@@ -15,7 +28,7 @@ def get_crash_report(event: Event) -> str:
             context=event.data.get("contexts"),
             debug_images=get_path(event.data, "debug_meta", "images", filter=True),
             exceptions=get_path(event.data, "exception", "values", filter=True),
-            symbolicated=False,  # TODO
+            symbolicated=True,
         )
     )
 

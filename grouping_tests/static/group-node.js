@@ -40,49 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             target.innerHTML = diffHtml;
         });
     });
-
-    var eventCompareLeft = null;
-
-    document.querySelectorAll('.compare-events').forEach(a => {
-        a.addEventListener('click', (event) => {
-            event.preventDefault();
-
-            if(eventCompareLeft){
-                if(eventCompareLeft != a) {
-                    compareEvents(eventCompareLeft.href, a.href);
-                }
-                a.className = "";
-                    a.querySelector('i').className = "bi-file-diff";
-                    eventCompareLeft = null;
-            } else {
-                eventCompareLeft = a;
-                a.className = "selected";
-                a.querySelector('i').className = "bi-file-diff-fill";
-            }
-        });
-    });
 });
 
-function compareEvents(leftURL, rightURL) {
-    load(leftURL, function(left) {
-        load(rightURL, function(right) {
-            const diff = difflib.unifiedDiff(left.split(' '), right.split(' '));
-            console.log(diff);
-        });
-    });
-}
 
-function load(url, callback) {
-    const httpRequest = new XMLHttpRequest();
-
-    httpRequest.onreadystatechange = function() {
-        if (httpRequest.readyState === XMLHttpRequest.DONE) {
-            if (httpRequest.status === 200) {
-                callback(httpRequest.responseText);
-            }
-        }
-    };
-    httpRequest.open('GET', url);
-    httpRequest.send();
-}
 

@@ -76,13 +76,33 @@
                         <a href="{{ event.dump_variants_url }}"
                            class="" title="Variants"><i class="bi-card-text"></i></a>
 
-                        <a href="#" class="compare-events" title="Compare"><i class="bi-file-diff"></i></a>
+                        <a href="#" class="compare-events" title="Compare"><i></i></a>
                     </span>
 
                 </li>
             {% endfor %}
         </ul>
     {% endif %}
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="compare-modal" tabindex="-1">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Compare events</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="compare-modal-body">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="compare-footer" class="toast position-fixed bottom-0 end-0 p-3">
+            <div class="toast-body">
+                1 event selected for comparison.
+                <a href="#" id="clear-comparison">Clear</button>
+            </div>
         </div>
 
         <script>
@@ -93,5 +113,6 @@
 
         <script src="{{ home }}/static/group-node.js"></script>
         <script src="{{ home }}/static/tree-chart.js"></script>
+        <script src="{{ home }}/static/compare.js"></script>
         <script src="{{ home }}/static/lib/difflib.js"></script>
 {% endblock %}

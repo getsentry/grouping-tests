@@ -5,6 +5,8 @@ function renderTreeChart(data) {
     var root = d3.hierarchy(data).sum((d) => d.item_count);
 
     const svg = document.getElementById('tree-chart');
+    if(svg === null) return;
+
     const width = parseInt(svg.parentElement.clientWidth);
 
     const layerHeight = 40;

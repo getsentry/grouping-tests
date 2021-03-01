@@ -1,37 +1,35 @@
 # prelude of careful imports so django app is correctly initialized
 import os
-
 os.environ['SENTRY_SKIP_SERVICE_VALIDATION'] = "yes"
 from sentry.runner import configure
-
 configure()
 
 
-import glob
-import json
 import logging
-import os
-import pickle
-import sys
-import time
-from multiprocessing import Manager
-from pathlib import Path
-from typing import Dict, List, Optional
-
 import click
-import sentry_sdk
-from sentry import _get_git_revision, get_version
+import sys
+import json
+import glob
+import pickle
+import time
+from pathlib import Path
+from typing import List, Dict, Optional
+import os
+from multiprocessing import Manager
+
 from sentry.event_manager import materialize_metadata
 from sentry.eventstore.models import Event
+from sentry import get_version, _get_git_revision
 
+import sentry_sdk
 sentry_sdk.init("")
 
-from grouping_tests.crash import dump_variants, get_crash_report
 from grouping_tests.groups.base import GroupNode
 from grouping_tests.groups.flat import ListNode
 from grouping_tests.groups.tree import TreeNode
-from grouping_tests.item import EventItem
 from grouping_tests.report import HTMLReport, ProjectReport
+from grouping_tests.crash import get_crash_report, dump_variants
+
 
 LOG = logging.getLogger(__name__)
 
@@ -90,7 +88,7 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
 
         if project is None:
             project = generate_project_tree(
-                event_dir, config_dict, group_type, entry, num_workers, report_dir)
+                event_dir, config_dict, group_type, entry, num_workers)
             if pickle_dir:
                 store_pickle(pickle_dir, project)
 
@@ -106,7 +104,7 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
     LOG.info("Done. Time ellapsed: %s", (time.time() - t0))
 
 
-def generate_project_tree(event_dir, config, group_type, entry, num_workers, report_dir):
+def generate_project_tree(event_dir, config, group_type, entry, num_workers):
 
     project_id = entry.name
 
@@ -120,7 +118,7 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers, rep
     LOG.info("Project %s: Processing...", project_id)
     with Manager() as manager:
         with manager.Pool(num_workers) as pool:
-            processor = EventProcessor(event_dir, config, project_id, report_dir)
+            processor = EventProcessor(event_dir, config, project_id)
             results = map_fn(pool, num_workers)(processor, filenames)
             progress_bar = click.progressbar(results, length=len(filenames))
             with progress_bar:
@@ -142,11 +140,10 @@ def map_fn(pool, num_workers):
 
 class EventProcessor:
 
-    def __init__(self, event_dir, config, project_id, report_dir):
+    def __init__(self, event_dir, config, project_id):
         self._event_dir = event_dir
         self._config = config
         self._project_id = project_id
-        self._report_dir = report_dir
         self._seen = set()
 
     def __call__(self, filename):
@@ -170,7 +167,7 @@ class EventProcessor:
             # Prevent events ending up in the project node
             hierarchical_hashes = ["NO_HASH"]
 
-        item = EventItem(event, self._report_dir / "event_data")
+        item = extract_event_data(event)
         item['json_url'] = Path(filename).relative_to(self._event_dir)
 
         # Seems abundant to do this for every event, but it's faster
@@ -178,9 +175,20 @@ class EventProcessor:
         item['crash_report'] = get_crash_report(event)
         item['dump_variants'] = dump_variants(self._config, event)
 
-        item.on_disk['dump_variants.txt'] = item['dump_variants']
-
         return flat_hashes, hierarchical_hashes, item
+
+
+def extract_event_data(event: Event) -> dict:
+    title, *tail = event.title.split(": ", 1)
+
+    subtitle = tail[0] if tail else event.data.get('metadata', {}).get('value')
+
+    return {
+        'event_id': event.event_id,
+        'title': title,
+        'subtitle': subtitle,
+        'culprit': event.culprit
+    }
 
 
 def write_metadata(report_dir: Path, config: dict):

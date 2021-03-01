@@ -3,6 +3,7 @@ from typing import List
 import json
 import os
 from difflib import unified_diff
+import shutil
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -20,10 +21,19 @@ class HTMLReport:
 
     def __init__(self, parent_dir: Path, metadata, projects: List[str]):
 
+        self._copy_static_files(parent_dir)
+
         _render_to_file("report.html", parent_dir / "index.html", {
             'projects': sorted(projects),
             'metadata': json.dumps(metadata, indent=4)
         })
+
+    @staticmethod
+    def _copy_static_files(parent_dir: Path):
+        src = Path(__file__).parent / "static"
+        dst = parent_dir / "static"
+
+        shutil.copytree(src, dst)
 
 
 class ProjectReport:

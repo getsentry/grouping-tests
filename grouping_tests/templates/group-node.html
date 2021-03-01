@@ -85,8 +85,13 @@
     {% endif %}
         </div>
 
-<script>
-    {% include "group-node.js"  %}{# Abusing template include for js #}
-</script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                renderTreeChart({{ tree_chart_data|safe }});
+            });
+        </script>
 
+        <script src="{{ home }}/static/group-node.js"></script>
+        <script src="{{ home }}/static/tree-chart.js"></script>
+        <script src="{{ home }}/static/lib/difflib.js"></script>
 {% endblock %}

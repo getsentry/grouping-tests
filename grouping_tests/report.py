@@ -49,6 +49,8 @@ class ProjectReport:
 
         output_path = self._html_path(node, ancestors)
 
+        self._write_event_data(node, ancestors)
+
         _render_to_file("group-node.html", output_path, {
             'title': _node_title(node),
             'subtitle': _node_subtitle(node),
@@ -64,10 +66,26 @@ class ProjectReport:
             'tree_chart_data': json.dumps(_node_to_d3(node)),
         })
 
-    def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):
+    def _output_path(self, node: GroupNode, ancestors: List[GroupNode]):
         path = [ancestor.name for ancestor in ancestors] + [node.name]
 
-        return self._root_dir.joinpath(*path) / "index.html"
+        return self._root_dir.joinpath(*path)
+
+    def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):
+        return self._output_path(node, ancestors) / "index.html"
+
+    def _write_event_data(self, node, ancestors):
+        # Store variant dump on disk, but only if it's different from the
+        # exemplar's dump
+        exemplar_variants = (node.exemplar or {}).get('dump_variants')
+        event_data_target_dir = self._output_path(node, ancestors) / "event_data"
+        os.makedirs(event_data_target_dir, exist_ok=False)
+        for event in node.items:
+            dump_variants = event.get('dump_variants')
+            if dump_variants != exemplar_variants:
+                path = event_data_target_dir / f"{event['event_id']}-dump-variants.txt"
+                with open(path, 'w') as f:
+                    f.write(f"{dump_variants}")
 
 
 def _get_descendants(node, ancestors):

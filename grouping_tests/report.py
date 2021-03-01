@@ -82,10 +82,15 @@ class ProjectReport:
         os.makedirs(event_data_target_dir, exist_ok=False)
         for event in node.items:
             dump_variants = event.get('dump_variants')
-            if dump_variants != exemplar_variants:
-                path = event_data_target_dir / f"{event['event_id']}-dump-variants.txt"
-                with open(path, 'w') as f:
+            if event == node.exemplar or dump_variants != exemplar_variants:
+                filename = f"{event['event_id']}-dump-variants.txt"
+                event['dump_variants_url'] = f"event_data/{filename}"
+                with open(event_data_target_dir / filename, 'w') as f:
                     f.write(f"{dump_variants}")
+            else:
+                # Refer to same variant as exemplar
+                filename = f"{node.exemplar['event_id']}-dump-variants.txt"
+                event['dump_variants_url'] = f"event_data/{filename}"
 
 
 def _get_descendants(node, ancestors):

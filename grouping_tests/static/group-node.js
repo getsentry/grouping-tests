@@ -18,6 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
             item.click();
         });
     });
+
+    document.querySelectorAll('.copy-to-clipboard').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const sourceEl = document.getElementById(button.dataset.source);
+            const source = sourceEl.innerText;
+            navigator.clipboard.writeText(sourceEl.innerText).then(value => {
+                button.innerText = "Copied.";
+                button.disabled = "disabled";
+            })
+        });
+    });
 });
 
 

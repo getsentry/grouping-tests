@@ -15,6 +15,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="{{ modal_id }}-data-parent">
+                <p><button class="copy-to-clipboard btn btn-outline-primary" data-source="{{ modal_id }}-data">
+                    <i class="bi-clipboard"></i>
+                    Copy to clipboard
+                </button></p>
                 <pre id="{{ modal_id }}-data" class="border bg-light">{{ modal_data }}</pre>
                 <div id="{{ modal_id }}-dynamic-content"></div>
             </div>

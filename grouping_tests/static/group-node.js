@@ -39,6 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
             })
         });
     });
+
+    document.getElementById('toggle-cardinality').addEventListener('change', event => {
+        if(event.target.checked) {
+            renderTreeChart(treeChartData, true);
+        } else {
+            renderTreeChart(treeChartData, false);
+        }
+    });
+
 });
 
 

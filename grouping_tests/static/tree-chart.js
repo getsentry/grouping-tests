@@ -1,11 +1,15 @@
 // Tree chart
 // Inspired by https://livebook.manning.com/book/d3js-in-action-second-edition/chapter-6/v-6/38
 
-function renderTreeChart(data) {
-    var root = d3.hierarchy(data).sum((d) => d.item_count);
+function renderTreeChart(data, weighItemCount) {
+
+    var root = d3.hierarchy(data);
+    root = weighItemCount ? root.sum(d => d.item_count) : root.count();
 
     const svg = document.getElementById('tree-chart');
     if(svg === null) return;
+
+    svg.innerHTML = ''; // Clear previous renderings
 
     const width = parseInt(svg.parentElement.clientWidth);
 
@@ -14,7 +18,7 @@ function renderTreeChart(data) {
     svg.setAttribute("width", width);
     svg.setAttribute("height", height);
 
-    var partitionLayout = d3.partition().size([width, height]);
+    var partitionLayout = d3.partition().size([width, height]).round(true);
 
     partitionLayout(root);
 
@@ -61,7 +65,6 @@ function renderTreeChart(data) {
         .append("text")
         .attr("dx", 8)
         .attr("dy", 25)
-        .text((d) => d.data.name)
+        .text((d) => (d.x1 - d.x0) && d.data.name)
         .style("fill", "white");
 }
-

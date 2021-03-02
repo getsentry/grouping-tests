@@ -43,6 +43,10 @@
 
     {% if descendants %}
         <h2 class="mt-5">Issue Tree</h2>
+        <p class="text-end">
+            <input type="checkbox" checked="checked" id="toggle-cardinality" />
+            <label for="toggle-cardinality">Scale by event count</label>
+        </p>
         <div>
             <svg id="tree-chart"></svg>
         </div>
@@ -109,7 +113,9 @@
 
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                renderTreeChart({{ tree_chart_data|safe }});
+                // Deliberately global
+                treeChartData = {{ tree_chart_data|safe }};
+                renderTreeChart(treeChartData, true);
             });
         </script>
 

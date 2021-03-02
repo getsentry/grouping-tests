@@ -29,6 +29,11 @@
                 <span title="events in subtree">
                     <i class="bi-diagram-2-fill"></i> {{ node.total_item_count }}
                 </span>
+
+                <span class="event-tools">
+                    <a href="{{ home }}{{ node.exemplar.dump_variants_url }}" class="compare-events" title="Compare"><i></i></a>
+                </span>
+
             </div>
         </div>
         {% if node.exemplar.subtitle or node_diff %}

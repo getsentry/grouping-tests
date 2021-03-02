@@ -43,13 +43,15 @@ class ProjectReport:
         self._events_base_url = events_base_url
         self._current_depth = 0
 
-        root.visit(self._render_node)  # Renders all nodes
+        # Write grouping variants to disk for each event
+        root.visit(self._write_event_data)
+
+        # Create HTML page for each node
+        root.visit(self._render_node)
 
     def _render_node(self, node: GroupNode, ancestors: List[GroupNode]):
 
         output_path = self._html_path(node, ancestors)
-
-        self._write_event_data(node, ancestors)
 
         _render_to_file("group-node.html", output_path, {
             'title': _node_title(node),
@@ -74,6 +76,11 @@ class ProjectReport:
     def _html_path(self, node: GroupNode, ancestors: List[GroupNode]):
         return self._output_path(node, ancestors) / "index.html"
 
+    def _rel_url(self, node: GroupNode, ancestors: List[GroupNode]):
+        path = [ancestor.name for ancestor in ancestors] + [node.name]
+
+        return "/".join(path)
+
     def _write_event_data(self, node, ancestors):
         # Store variant dump on disk, but only if it's different from the
         # exemplar's dump
@@ -84,13 +91,13 @@ class ProjectReport:
             dump_variants = event.get('dump_variants')
             if event == node.exemplar or dump_variants != exemplar_variants:
                 filename = f"{event['event_id']}-dump-variants.txt"
-                event['dump_variants_url'] = f"event_data/{filename}"
+                event['dump_variants_url'] = f"{self._rel_url(node, ancestors)}/event_data/{filename}"
                 with open(event_data_target_dir / filename, 'w') as f:
                     f.write(f"{dump_variants}")
             else:
                 # Refer to same variant as exemplar
-                filename = f"{node.exemplar['event_id']}-dump-variants.txt"
-                event['dump_variants_url'] = f"event_data/{filename}"
+                # NOTE: assumes that exemplar.dump_variants_url is set earlier
+                event['dump_variants_url'] = node.exemplar['dump_variants_url']
 
 
 def _get_descendants(node, ancestors):

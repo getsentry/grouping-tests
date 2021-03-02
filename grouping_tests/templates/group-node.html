@@ -52,7 +52,7 @@
             <a href="#" id="collapse-all">Expand / collapse all</a>
         </div>
         <div>
-            {% for node, url, node_diff, children in descendants %}
+            {% for node, url, children in descendants %}
                 {% include 'group-box.html' %}
             {% endfor %}
         </div>

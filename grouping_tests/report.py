@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 import json
 import os
-from difflib import unified_diff
 import shutil
 
 from django.conf import settings
@@ -106,7 +105,6 @@ def _get_descendants(node, ancestors):
         (
             child,
             _descendant_url(child, child_ancestors[1:]),
-            _node_diff(node, child),
             _get_descendants(child, child_ancestors),
         )
         for child in node.children.values()
@@ -148,24 +146,6 @@ def _node_hash(node):
 
 def _get_field(node, name):
     return node.exemplar and node.exemplar.get(name)
-
-
-def _node_diff(from_: GroupNode, to: GroupNode) -> str:
-    """ What sets this node apart from the other node """
-    dv1 = _get_field(from_, 'dump_variants')
-    dv2 = _get_field(to, 'dump_variants')
-
-    if dv1 and dv2:
-        diff = "".join(unified_diff(
-                dv1.splitlines(1),
-                dv2.splitlines(1),
-            )
-        )
-        if diff:
-            # diff2html seems to require this header
-            return f"diff --git a/{from_.name} b/{to.name}\n{diff}"
-
-    return ""
 
 
 def _node_to_d3(node: GroupNode, ancestors=None) -> dict:

@@ -36,15 +36,9 @@
 
             </div>
         </div>
-        {% if node.exemplar.subtitle or node_diff %}
+        {% if node.exemplar.subtitle %}
             <div class="card-body">
                 <p>{{ node.exemplar.subtitle }}</p>
-
-                {% if node_diff %}
-                    {% with modal_class_name="sibling-diff" modal_name='Grouping Diff' modal_id='sibling_diff_'|add:node.name modal_data=node_diff modal_size='fullscreen' %}
-                        {% include 'modal.html' %}
-                    {% endwith %}
-                {% endif %}
             </div>
         {% endif %}
     </div>
@@ -52,7 +46,7 @@
 
 {% if node.children %}
     <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3">
-        {% for node, url, node_diff, children in children %}
+        {% for node, url, children in children %}
             {% include 'group-box.html' %}
         {% endfor %}
     </div>

@@ -42,3 +42,12 @@ Example config:
     "id": "newstyle:2019-10-29"
 }
 ```
+
+### Serving the grouping report
+
+The report loads some event data lazily via AJAX. For this to work, you need to
+serve the report from a web server, e.g.
+
+```bash
+python3 -m http.server
+```

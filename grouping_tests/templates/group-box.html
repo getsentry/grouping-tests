@@ -5,6 +5,7 @@
                 {% if node.children %}
                     <span
                         class="collapser"
+                        id="collapser-{{ node.name }}"
                         data-bs-toggle="collapse"
                         data-bs-target="#children-of-{{ node.name }}"
                         aria-expanded="true"
@@ -45,7 +46,7 @@
 </div>
 
 {% if node.children %}
-    <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3">
+    <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3" data-handle="collapser-{{ node.name }}">
         {% for node, url, children in children %}
             {% include 'group-box.html' %}
         {% endfor %}

@@ -1,21 +1,31 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    document.querySelectorAll('.collapser').forEach(button => {
-        button.addEventListener('click', (event) => {
-            event.preventDefault();
-            const icon = button.querySelector("i");
-            if(button.classList.contains("collapsed")) {
-                icon.className = "bi-chevron-right";
-            } else {
-                icon.className = "bi-chevron-down";
-            }
+    const collapseAll = document.querySelector('#collapse-all');
+    if(collapseAll) collapseAll.addEventListener('click', (event) => {
+        event.preventDefault();
+        document.querySelectorAll('.collapse').forEach(el => {
+            const collapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el);
+            collapse.hide();
         });
     });
 
-    const collapseAll = document.querySelector('#collapse-all');
-    if(collapseAll) collapseAll.addEventListener('click', () => {
-        document.querySelectorAll('.collapser').forEach(item => {
-            item.click();
+    const expandAll = document.querySelector('#expand-all');
+    if(expandAll) expandAll.addEventListener('click', (event) => {
+        event.preventDefault();
+        document.querySelectorAll('.collapse').forEach(el => {
+            const collapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el);
+            collapse.show();
+        });
+    });
+
+    document.querySelectorAll('.collapse').forEach(el => {
+        el.addEventListener('show.bs.collapse', () => {
+            const handle = document.getElementById(el.dataset.handle);
+            handle.querySelector('i').className = 'bi-chevron-down';
+        });
+        el.addEventListener('hide.bs.collapse', () => {
+            const handle = document.getElementById(el.dataset.handle);
+            handle.querySelector('i').className = 'bi-chevron-right';
         });
     });
 

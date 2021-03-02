@@ -23,14 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
         button.addEventListener('click', (event) => {
             const button = event.target;
 
-            const modal_selector = button.dataset.bsTarget;
+            const modalSelector = button.dataset.bsTarget;
 
-            const modal = document.querySelector(modal_selector);
-            const source_container = modal.querySelector("pre");
-            const source = source_container.innerHTML;
-            source_container.className += " d-none"
+            const modal = document.querySelector(modalSelector);
+            const sourceContainer = modal.querySelector("pre");
+            const source = sourceContainer.innerHTML;
+            sourceContainer.className += " d-none"
 
-            const target = modal.querySelector(modal_selector+"-dynamic-content");
+            const target = modal.querySelector(modalSelector+"-dynamic-content");
 
             var diffHtml = Diff2Html.html(source, {
                 drawFileList: false,

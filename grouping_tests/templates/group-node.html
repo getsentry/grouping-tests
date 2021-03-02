@@ -76,7 +76,7 @@
                         <a href="{{ event.dump_variants_url }}"
                            class="" title="Variants"><i class="bi-card-text"></i></a>
 
-                        <a href="#" class="compare-events" title="Compare"><i></i></a>
+                        <a href="{{ event.dump_variants_url }}" class="compare-events" title="Compare"><i></i></a>
                     </span>
 
                 </li>
@@ -114,5 +114,5 @@
         <script src="{{ home }}/static/group-node.js"></script>
         <script src="{{ home }}/static/tree-chart.js"></script>
         <script src="{{ home }}/static/compare.js"></script>
-        <script src="{{ home }}/static/lib/difflib.js"></script>
+        <script src="{{ home }}/static/difflib.js"></script>
 {% endblock %}

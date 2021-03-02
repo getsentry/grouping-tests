@@ -6,21 +6,22 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             setCompareState(() => {
                 const leftURL = localStorage.getItem("compare-left-url");
-                if(leftURL === null) {
-                    localStorage.setItem("compare-left-url", a.href);
+                if (leftURL === null) {
+                    localStorage.setItem("compare-left-url", normalizeURL(a.href));
                 } else {
-                    if(leftURL == a.href) {
+                    if (leftURL == a.href) {
                         // Clicked again, remove
                         localStorage.removeItem("compare-left-url");
                     } else {
                         // Clicked a 2nd event, set as right url
-                        localStorage.setItem("compare-right-url", a.href);
+                        localStorage.setItem("compare-right-url", normalizeURL(a.href));
                     }
                 }
             });
         });
     });
 
+    // Clear all compare state when user clicks on "Clear"
     document.getElementById("clear-comparison").addEventListener('click', (event) => {
         event.preventDefault();
         setCompareState(() => {
@@ -29,13 +30,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Compare events when modal is shown
+    document.getElementById("compare-modal").addEventListener('show.bs.modal', compareEvents);
+
+    // Clear all compare state when modal is closed
     document.getElementById("compare-modal").addEventListener('hidden.bs.modal', function () {
         setCompareState(() => {
             localStorage.removeItem("compare-left-url");
             localStorage.removeItem("compare-right-url");
         });
-    })
+    });
 
+    // Render compare elements on page load
     setCompareState();
 });
 
@@ -43,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /// Execute given function and refresh compare elements
 function setCompareState(fn) {
 
-    if(fn) fn();
+    if (fn) fn();
 
     renderCompareButtons();
     renderCompareFooter();
@@ -53,7 +59,7 @@ function setCompareState(fn) {
 function renderCompareButtons() {
     const leftURL = localStorage.getItem("compare-left-url");
     document.querySelectorAll('.compare-events').forEach(a => {
-        if(leftURL == a.href) {
+        if (leftURL == a.href) {
             a.classList.add("selected");
             a.querySelector('i').className = "bi-file-diff-fill";
         } else {
@@ -65,7 +71,7 @@ function renderCompareButtons() {
 
 function renderCompareFooter() {
     const footer = document.getElementById("compare-footer");
-    if(localStorage.getItem("compare-left-url")) {
+    if (localStorage.getItem("compare-left-url") && !localStorage.getItem("compare-right-url")) {
         footer.classList.add("show");
     } else {
         footer.classList.remove("show");
@@ -74,20 +80,34 @@ function renderCompareFooter() {
 
 function renderCompareModal() {
     const modal = new bootstrap.Modal(document.getElementById("compare-modal"));
-    if(localStorage.getItem("compare-left-url") && localStorage.getItem("compare-right-url")) {
+    if (localStorage.getItem("compare-left-url") && localStorage.getItem("compare-right-url")) {
         modal.show();
     } else {
         modal.hide();
     }
 }
 
+function compareEvents() {
+    const leftURL = localStorage.getItem("compare-left-url");
+    load(leftURL, function (left) {
+        const rightURL = localStorage.getItem("compare-right-url");
+        load(rightURL, function (right) {
 
+            const diff = difflib.unifiedDiff(
+                left.split('\n'),
+                right.split('\n'),
+                {n: 1000}, // Make sure the whole file is visible
+            );
 
-function compareEvents(leftURL, rightURL) {
-    load(leftURL, function(left) {
-        load(rightURL, function(right) {
-            const diff = difflib.unifiedDiff(left.split(' '), right.split(' '));
-            console.log(diff);
+            const fullDiff = "diff --git a/foo b/foo\n" + diff.join("\n");
+
+            var diffHtml = Diff2Html.html(fullDiff, {
+                drawFileList: false,
+                matching: 'lines',
+                outputFormat: 'side-by-side'
+            });
+
+            document.getElementById("compare-modal-body").innerHTML = diffHtml;
         });
     });
 }
@@ -95,7 +115,7 @@ function compareEvents(leftURL, rightURL) {
 function load(url, callback) {
     const httpRequest = new XMLHttpRequest();
 
-    httpRequest.onreadystatechange = function() {
+    httpRequest.onreadystatechange = function () {
         if (httpRequest.readyState === XMLHttpRequest.DONE) {
             if (httpRequest.status === 200) {
                 callback(httpRequest.responseText);
@@ -104,4 +124,8 @@ function load(url, callback) {
     };
     httpRequest.open('GET', url);
     httpRequest.send();
+}
+
+function normalizeURL(href) {
+    return new URL(href, window.location.href).href
 }

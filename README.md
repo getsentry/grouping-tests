@@ -18,7 +18,7 @@ clickhouse-client --query 'SELECT project_id, event_id FROM sentry_local LIMIT 1
 | python store_events.py --output-dir ./events
 ```
 
-### Create grouping report (under development)
+### Create grouping report
 
 Applies a grouping strategy and creates the corresponding report.
 In addition to the config file, you must choose from either ``flat`` or ``tree`` grouping mode on the command line:

@@ -40,7 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.getElementById('toggle-cardinality').addEventListener('change', event => {
+    const toggleCardinality = document.getElementById('toggle-cardinality');
+    if(toggleCardinality) toggleCardinality.addEventListener('change', event => {
         if(event.target.checked) {
             renderTreeChart(treeChartData, true);
         } else {

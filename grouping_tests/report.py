@@ -24,7 +24,7 @@ class HTMLReport:
 
         _render_to_file("report.html", parent_dir / "index.html", {
             'projects': sorted(projects),
-            'metadata': json.dumps(metadata, indent=4)
+            'metadata': json.dumps(metadata, indent=4),
         })
 
     @staticmethod

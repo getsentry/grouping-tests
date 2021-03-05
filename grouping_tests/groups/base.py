@@ -28,12 +28,14 @@ class GroupNode:
 
         self.total_item_count += 1
 
-    def visit(self, visitor, ancestors=None):
+    def nodes(self, ancestors=None):
+        """ Iterate nodes in a depth-first manner """
         if ancestors is None:
             ancestors = []
-        visitor(self, ancestors)
+        yield self, ancestors
+
         for child in self.children.values():
-            child.visit(visitor, ancestors + [self])
+            yield from child.nodes(ancestors + [self])
 
     def _insert(self, flat_hashes: List[str], hierarchical_hashes: List[str], item):
         """ Override in subclasses """

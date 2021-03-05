@@ -43,10 +43,12 @@ class ProjectReport:
         self._current_depth = 0
 
         # Write grouping variants to disk for each event
-        root.visit(self._write_event_data)
+        for node, ancestors in root.nodes():
+            self._write_event_data(node, ancestors)
 
         # Create HTML page for each node
-        root.visit(self._render_node)
+        for node, ancestors in root.nodes():
+            self._render_node(node, ancestors)
 
     def _render_node(self, node: GroupNode, ancestors: List[GroupNode]):
 

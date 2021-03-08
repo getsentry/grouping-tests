@@ -15,18 +15,25 @@ class GroupNode:
 
         self.exemplar = None  # Item representing this node
 
+        from .flat import FlatInserter
+        from .tree import TreeInserter
+
+        self._flat_inserter = FlatInserter(self)
+        self._tree_inserter = TreeInserter(self)
+
     @property
     def item_count(self):
         return len(self.items)
 
-    def insert(self, flat_hashes: List[str], hierarchical_hashes: List[str], item):
+    def insert_hierarchical(self, hashes: List[str], item):
+        """ Interpret hashes as path in issue tree """
+        self._tree_inserter.insert(hashes, item)
+        self._update(item)
 
-        self._insert(flat_hashes, hierarchical_hashes, item)
-
-        if self.exemplar is None:
-            self.exemplar = item
-
-        self.total_item_count += 1
+    def insert_flat(self, hashes: List[str], item):
+        """ Interpret hashes as path in issue tree """
+        self._flat_inserter.insert(hashes, item)
+        self._update(item)
 
     def nodes(self, ancestors=None):
         """ Iterate nodes in a depth-first manner """
@@ -37,20 +44,27 @@ class GroupNode:
         for child in self.children.values():
             yield from child.nodes(ancestors + [self])
 
-    def _insert(self, flat_hashes: List[str], hierarchical_hashes: List[str], item):
-        """ Override in subclasses """
-        raise NotImplementedError
+    def _update(self, item):
+        """ Keep track of representative and item count """
+        if self.exemplar is None:
+            self.exemplar = item
 
-    @staticmethod
-    def _child_type():
-        """ Override in subclasses """
-        raise NotImplementedError
+        self.total_item_count += 1
 
-    def _child(self, name):
-        if name not in self.children:
-            klass = self._child_type()
-            child = self.children[name] = klass(name)
+
+class Inserter:
+
+    """ Insertion strategy for a GroupNode """
+
+    def __init__(self, node: GroupNode):
+
+        self._node = node
+
+    def _get_child(self, name: str) -> 'GroupNode':
+        children = self._node.children
+        if name not in children:
+            child = children[name] = GroupNode(name)
         else:
-            child = self.children[name]
+            child = children[name]
 
         return child

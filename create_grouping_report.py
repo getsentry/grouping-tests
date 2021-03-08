@@ -24,25 +24,18 @@ from sentry import get_version, _get_git_revision
 import sentry_sdk
 sentry_sdk.init("")
 
+
 from grouping_tests.groups.base import GroupNode
-from grouping_tests.groups.flat import ListNode
-from grouping_tests.groups.tree import TreeNode
 from grouping_tests.report import HTMLReport, ProjectReport
 from grouping_tests.crash import get_crash_report, dump_variants
 
 
 LOG = logging.getLogger(__name__)
 
-GROUP_TYPES = {
-    'flat': ListNode,
-    'tree': TreeNode,
-}
-
 
 @click.command()
 @click.option("--event-dir", required=True, type=Path, help="created using store_events.py")
 @click.option("--config", required=True, type=Path, help="Grouping config")
-@click.option("--grouping-mode", required=True, type=click.Choice(GROUP_TYPES.keys()))
 @click.option("--report-dir", required=True, type=Path, help="output directory")
 @click.option("--events-base-url", type=str, help="Base URL for JSON links. Defaults to --event-dir")
 @click.option("--num-workers", type=int, help="Parallelize. Default corresponds to Python multiprocessing default")
@@ -51,8 +44,7 @@ GROUP_TYPES = {
     type=Path,
     help="If set, cache issue trees as pickles. Useful for development.")
 def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
-                           grouping_mode: str, events_base_url: str,
-                           pickle_dir: Path, num_workers: int):
+                           events_base_url: str, pickle_dir: Path, num_workers: int):
     """ Create a grouping report """
 
     if events_base_url is None:
@@ -72,8 +64,6 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
 
     report_metadata = write_metadata(report_dir, config_dict)
 
-    group_type = GROUP_TYPES[grouping_mode]
-
     t0 = time.time()
 
     project_ids = []
@@ -88,7 +78,7 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
 
         if project is None:
             project = generate_project_tree(
-                event_dir, config_dict, group_type, entry, num_workers)
+                event_dir, config_dict, entry, num_workers)
             if pickle_dir:
                 store_pickle(pickle_dir, project)
 
@@ -104,12 +94,12 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
     LOG.info("Done. Time ellapsed: %s", (time.time() - t0))
 
 
-def generate_project_tree(event_dir, config, group_type, entry, num_workers):
+def generate_project_tree(event_dir, config, entry, num_workers):
 
     project_id = entry.name
 
     # Create a root node for all groups
-    project = group_type(project_id)
+    project = GroupNode(project_id)
 
     LOG.info("Project %s: Collecting filenames...", project_id)
     # iglob would be easier on memory, but we want to use the progress bar
@@ -125,7 +115,11 @@ def generate_project_tree(event_dir, config, group_type, entry, num_workers):
                 for result in progress_bar:
                     if result is not None:
                         flat_hashes, hierarchical_hashes, item = result
-                        project.insert(flat_hashes, hierarchical_hashes, item)
+                        if hierarchical_hashes:
+                            project.insert_hierarchical(hierarchical_hashes, item)
+                        else:
+                            flat_hashes = flat_hashes or ["NO_HASH"]  # ultimate fallback
+                            project.insert_flat(flat_hashes, item)
 
     return project
 
@@ -162,10 +156,6 @@ class EventProcessor:
 
         flat_hashes, hierarchical_hashes = (
             event.get_hashes(force_config=self._config))
-
-        if not hierarchical_hashes:
-            # Prevent events ending up in the project node
-            hierarchical_hashes = ["NO_HASH"]
 
         item = extract_event_data(event)
         item['json_url'] = Path(filename).relative_to(self._event_dir)

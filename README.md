@@ -21,7 +21,6 @@ clickhouse-client --query 'SELECT project_id, event_id FROM sentry_local LIMIT 1
 ### Create grouping report
 
 Applies a grouping strategy and creates the corresponding report.
-In addition to the config file, you must choose from either ``flat`` or ``tree`` grouping mode on the command line:
 
 If the resulting HTML report will be served via HTTP, make sure that the ``events``
 directory is also available, and pass its URL via ``--events-base-url``.
@@ -31,7 +30,6 @@ python create_grouping_report.py \
     --events-dir ./events \
     --config ./config.json \
     --report-dir ./report_$(date) \
-    --grouping-mode tree \
     --events-base-url http://example.com/events  # optional
 ```
 
@@ -39,7 +37,7 @@ Example config:
 
 ```json
 {
-    "id": "newstyle:2019-10-29"
+    "id": "mobile:2021-02-12"
 }
 ```
 

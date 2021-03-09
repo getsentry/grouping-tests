@@ -1,13 +1,18 @@
+from collections import namedtuple
 from typing import Any, Dict, List
+
+
+HashData = namedtuple('HashData', ('hash', 'label'))
 
 
 class GroupNode:
 
     """ Group of events. Subclasses differ in the way they insert / merge events """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, label: str):
 
         self.name = name
+        self.label = label
 
         self.total_item_count = 0  # Sum of items in self + descendants
         self.items: List[Any] = []
@@ -25,12 +30,12 @@ class GroupNode:
     def item_count(self):
         return len(self.items)
 
-    def insert_hierarchical(self, hashes: List[str], item):
+    def insert_hierarchical(self, hashes: List[HashData], item):
         """ Interpret hashes as path in issue tree """
         self._tree_inserter.insert(hashes, item)
         self._update(item)
 
-    def insert_flat(self, hashes: List[str], item):
+    def insert_flat(self, hashes: List[HashData], item):
         """ Interpret hashes as path in issue tree """
         self._flat_inserter.insert(hashes, item)
         self._update(item)
@@ -60,10 +65,10 @@ class Inserter:
 
         self._node = node
 
-    def _get_child(self, name: str) -> 'GroupNode':
+    def _get_child(self, name: str, label: str) -> 'GroupNode':
         children = self._node.children
         if name not in children:
-            child = children[name] = GroupNode(name)
+            child = children[name] = GroupNode(name, label)
         else:
             child = children[name]
 

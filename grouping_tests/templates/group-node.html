@@ -11,13 +11,16 @@
             <li class="breadcrumb-item">
                 <a href="{{ home }}index.html">Home</a>
             </li>
-            {% for prefix, name in ancestors %}
+            {% for prefix, name, breadcrumb in ancestors %}
                 <li class="breadcrumb-item">
-                    <a href="{{ prefix }}index.html">{{ name }}</a>
+                    <a href="{{ prefix }}index.html">
+                        {{ breadcrumb }}
+                    </a>
                 </li>
             {% endfor %}
             <li class="breadcrumb-item active" aria-current="page">
                 {{ title }}
+                {% if node.label %}<small class="text-muted"> ({{ node.label }})</small>{% endif %}
             </li>
         </ol>
     </nav>
@@ -27,6 +30,7 @@
     {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
 
     {% if hash %}<p class="text-muted">Hash: {{ hash }}</p>{% endif %}
+    {% if node.label %}<p class="text-muted">Label: {{ node.label }}</p>{% endif %}
 
     {% if node.exemplar %}
         <div class="btn-group btn-group-sm" role="group">

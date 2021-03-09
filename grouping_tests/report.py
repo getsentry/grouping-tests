@@ -60,7 +60,7 @@ class ProjectReport:
             'hash': _node_hash(node),
             'node': node,
             'ancestors': reversed([
-                ((i+1) * "../", _node_title(ancestor))
+                ((i+1) * "../", _node_title(ancestor), _breadcrumb(ancestor))
                 for i, ancestor in enumerate(reversed(ancestors))
             ]),
             'home': (len(ancestors) + 1) * "../",
@@ -142,6 +142,14 @@ def _node_subtitle(node):
     return node.exemplar and node.exemplar['subtitle']
 
 
+def _breadcrumb(node):
+    if node.children and node.label:
+        # Use tree label for intermediate nodes
+        return node.label
+
+    return _node_title(node)
+
+
 def _node_hash(node):
     return None if _is_project(node) else node.name
 
@@ -163,7 +171,7 @@ def _node_to_d3(node: GroupNode, ancestors=None) -> dict:
     children.sort(key=lambda d: d['name'])
 
     return {
-        "name": _node_title(node),
+        "name": node.label or _node_title(node),
         "href": _descendant_url(node, ancestors[1:]) if ancestors else None,
         "item_count": node.item_count,
         "children": children,

@@ -20,12 +20,12 @@ from multiprocessing import Manager
 from sentry.event_manager import materialize_metadata
 from sentry.eventstore.models import Event
 from sentry import get_version, _get_git_revision
+from sentry.grouping.variants import BaseVariant, ComponentVariant
 
 import sentry_sdk
 sentry_sdk.init("")
 
-
-from grouping_tests.groups.base import GroupNode
+from grouping_tests.groups.base import GroupNode, HashData
 from grouping_tests.report import HTMLReport, ProjectReport
 from grouping_tests.crash import get_crash_report, dump_variants
 
@@ -99,7 +99,7 @@ def generate_project_tree(event_dir, config, entry, num_workers):
     project_id = entry.name
 
     # Create a root node for all groups
-    project = GroupNode(project_id)
+    project = GroupNode(project_id, None)
 
     LOG.info("Project %s: Collecting filenames...", project_id)
     # iglob would be easier on memory, but we want to use the progress bar
@@ -114,12 +114,12 @@ def generate_project_tree(event_dir, config, entry, num_workers):
             with progress_bar:
                 for result in progress_bar:
                     if result is not None:
-                        flat_hashes, hierarchical_hashes, item = result
-                        if hierarchical_hashes:
-                            project.insert_hierarchical(hierarchical_hashes, item)
+                        flat, hierarchical, item = result
+                        if hierarchical:
+                            project.insert_hierarchical(hierarchical, item)
                         else:
-                            flat_hashes = flat_hashes or ["NO_HASH"]  # ultimate fallback
-                            project.insert_flat(flat_hashes, item)
+                            flat = flat or [HashData("NO_HASH", None)]
+                            project.insert_flat(flat, item)
 
     return project
 
@@ -154,8 +154,12 @@ class EventProcessor:
         event = Event(
             self._project_id, event_id, group_id=None, data=event_data)
 
-        flat_hashes, hierarchical_hashes = (
-            event.get_hashes(force_config=self._config))
+        flat_variants, hierarchical_variants = (
+            event.get_sorted_grouping_variants(force_config=self._config)
+        )
+
+        flat = self._get_hashes(flat_variants)
+        hierarchical = self._get_hashes(hierarchical_variants)
 
         item = extract_event_data(event)
         item['json_url'] = Path(filename).relative_to(self._event_dir)
@@ -165,7 +169,22 @@ class EventProcessor:
         item['crash_report'] = get_crash_report(event)
         item['dump_variants'] = dump_variants(self._config, event)
 
-        return flat_hashes, hierarchical_hashes, item
+        return flat, hierarchical, item
+
+    @classmethod
+    def _get_hashes(cls, variants: List[BaseVariant]) -> List[HashData]:
+        """ Get hash and label for each variant and filter out None hashes """
+        pairs = (
+            (variant.get_hash(), cls._get_label(variant)) for variant in variants
+        )
+        return [
+            HashData(hash_, label) for hash_, label in pairs
+            if hash_ is not None
+        ]
+
+    @staticmethod
+    def _get_label(variant: BaseVariant):
+        return variant.component.tree_label if isinstance(variant, ComponentVariant) else None
 
 
 def extract_event_data(event: Event) -> dict:

@@ -1,17 +1,14 @@
 from typing import List
 
-from .base import Inserter
-
+from .base import HashData, Inserter
 
 class TreeInserter(Inserter):
 
-    """ Represents a tree of event groups """
-
-    def insert(self, hierarchical_hashes: List[str], item):
+    def insert(self, hierarchical_hashes: List[HashData], item):
         """ Event hashes are interpreted as a path down a tree of event groups """
         if hierarchical_hashes:
             head, *tail = hierarchical_hashes
-            self._get_child(head).insert_hierarchical(tail, item)
+            self._get_child(head.hash, head.label).insert_hierarchical(tail, item)
         else:
             # We have reached our destination
             self._node.items.append(item)

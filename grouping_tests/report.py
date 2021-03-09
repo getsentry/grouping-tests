@@ -1,13 +1,18 @@
 from pathlib import Path
 from typing import List
 import json
+import logging
 import os
 import shutil
 
+import click
 from django.conf import settings
 from django.template.loader import render_to_string
 
 from grouping_tests.groups.base import GroupNode
+
+
+LOG = logging.getLogger(__name__)
 
 
 # HACK: add template dir to Django settings
@@ -43,15 +48,18 @@ class ProjectReport:
         self._current_depth = 0
 
         # Write grouping variants to disk for each event
-        for node, ancestors in root.nodes():
-            self._write_event_data(node, ancestors)
+        LOG.info("Project %s: Writing event data...", root.name)
+        with click.progressbar(length=root.total_item_count) as progress_bar:
+            for node, ancestors in root.nodes():
+                self._write_event_data(node, ancestors, progress_bar.update)
 
         # Create HTML page for each node
-        for node, ancestors in root.nodes():
-            self._render_node(node, ancestors)
+        LOG.info("Project %s: Writing HTML report...", root.name)
+        with click.progressbar(length=root.total_item_count) as progress_bar:
+            for node, ancestors in root.nodes():
+                self._render_node(node, ancestors, progress_bar.update)
 
-    def _render_node(self, node: GroupNode, ancestors: List[GroupNode]):
-
+    def _render_node(self, node: GroupNode, ancestors: List[GroupNode], update_fn):
         output_path = self._html_path(node, ancestors)
 
         _render_to_file("group-node.html", output_path, {
@@ -67,6 +75,7 @@ class ProjectReport:
             'descendants': _get_descendants(node, []),  # Skip self
             'events_base_url': self._events_base_url,
             'tree_chart_data': json.dumps(_node_to_d3(node)),
+            'event_iterator': UpdatingIterator(node.items, update_fn)
         })
 
     def _output_path(self, node: GroupNode, ancestors: List[GroupNode]):
@@ -82,7 +91,7 @@ class ProjectReport:
 
         return "/".join(path)
 
-    def _write_event_data(self, node, ancestors):
+    def _write_event_data(self, node, ancestors, update_fn):
         # Store variant dump on disk, but only if it's different from the
         # exemplar's dump
         exemplar_variants = (node.exemplar or {}).get('dump_variants')
@@ -99,6 +108,7 @@ class ProjectReport:
                 # Refer to same variant as exemplar
                 # NOTE: assumes that exemplar.dump_variants_url is set earlier
                 event['dump_variants_url'] = node.exemplar['dump_variants_url']
+            update_fn(1)
 
 
 def _get_descendants(node, ancestors):
@@ -176,3 +186,25 @@ def _node_to_d3(node: GroupNode, ancestors=None) -> dict:
         "item_count": node.item_count,
         "children": children,
     }
+
+
+class UpdatingIterator:
+
+    """ Used to connect progress bar with django template """
+
+    def __init__(self, items, update_fn):
+        self._items = items
+        self._update_fn = update_fn
+
+    def __iter__(self):
+        update_fn = self._update_fn
+        for item in self._items:
+            update_fn(1)
+            yield item
+
+    def __len__(self):
+        """ Needed by django template """
+        return len(self._items)
+
+
+

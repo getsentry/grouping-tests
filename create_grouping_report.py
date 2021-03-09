@@ -82,7 +82,6 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
             if pickle_dir:
                 store_pickle(pickle_dir, project)
 
-        LOG.info("Project %s: Saving HTML report...", project_id)
         project.exemplar = None  # HACKish makes sure that project does not display hash, stack trace, etc.
 
         ProjectReport(project, report_dir, events_base_url)
@@ -105,7 +104,7 @@ def generate_project_tree(event_dir, config, entry, num_workers):
     # iglob would be easier on memory, but we want to use the progress bar
     filenames = glob.glob(f"{entry.path}/**/*json", recursive=True)
 
-    LOG.info("Project %s: Processing...", project_id)
+    LOG.info("Project %s: Building issue tree...", project_id)
     with Manager() as manager:
         with manager.Pool(num_workers) as pool:
             processor = EventProcessor(event_dir, config, project_id)

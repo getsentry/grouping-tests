@@ -20,6 +20,7 @@ from multiprocessing import Manager
 from sentry.event_manager import materialize_metadata
 from sentry.eventstore.models import Event
 from sentry import get_version, _get_git_revision
+from sentry.grouping.api import get_default_enhancements
 from sentry.grouping.variants import BaseVariant, ComponentVariant
 
 import sentry_sdk
@@ -35,7 +36,8 @@ LOG = logging.getLogger(__name__)
 
 @click.command()
 @click.option("--event-dir", required=True, type=Path, help="created using store_events.py")
-@click.option("--config", required=True, type=Path, help="Grouping config")
+@click.option("--config", "-c", required=True, type=Path, multiple=True,
+              help="Grouping config. Multiple will be merged left to right.")
 @click.option("--report-dir", required=True, type=Path, help="output directory")
 @click.option("--events-base-url", type=str, help="Base URL for JSON links. Defaults to --event-dir")
 @click.option("--num-workers", type=int, help="Parallelize. Default corresponds to Python multiprocessing default")
@@ -43,7 +45,7 @@ LOG = logging.getLogger(__name__)
     "--pickle-dir",
     type=Path,
     help="If set, cache issue trees as pickles. Useful for development.")
-def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
+def create_grouping_report(event_dir: Path, config: List[Path], report_dir: Path,
                            events_base_url: str, pickle_dir: Path, num_workers: int):
     """ Create a grouping report """
 
@@ -59,8 +61,10 @@ def create_grouping_report(event_dir: Path, config: Path, report_dir: Path,
     if pickle_dir:
         os.makedirs(pickle_dir, exist_ok=True)
 
-    with open(config, 'r') as config_file:
-        config_dict = json.load(config_file)
+    config_dict = _default_config()
+    for config_path in config:
+        with open(config_path, 'r') as config_file:
+            config_dict.update(**json.load(config_file))
 
     report_metadata = write_metadata(report_dir, config_dict)
 
@@ -228,6 +232,10 @@ def store_pickle(pickle_dir: Path, project: GroupNode):
     filename = pickle_dir / f"{project.name}.pickle"
     with open(filename, 'wb') as f:
         pickle.dump(project, file=f)
+
+
+def _default_config() -> dict:
+    return {'enhancements': get_default_enhancements()}
 
 
 if __name__ == "__main__":

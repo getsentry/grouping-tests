@@ -20,6 +20,8 @@ class GroupNode:
 
         self.exemplar = None  # Item representing this node
 
+        # Prevent circular import:
+        # pylint: disable=import-outside-toplevel
         from .flat import FlatInserter
         from .tree import TreeInserter
 

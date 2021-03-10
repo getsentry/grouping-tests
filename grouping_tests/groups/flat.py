@@ -30,10 +30,9 @@ class FlatInserter(Inserter):
                 # Add event to exising group
                 group, *tail = candidates
                 if tail:
-                    LOG.warn("Multiple group candidates for item %s", item)
+                    LOG.warning("Multiple group candidates for item %s", item)
             else:
                 # Add event to a new group
-                # TODO: use better name for child
                 name = "-".join(d.hash for d in flat_hashes)
                 label = ", ".join(d.label or "" for d in flat_hashes)
                 group = self._get_child(name, label)

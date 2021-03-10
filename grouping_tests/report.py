@@ -101,7 +101,9 @@ class ProjectReport:
             dump_variants = event.get('dump_variants')
             if event == node.exemplar or dump_variants != exemplar_variants:
                 filename = f"{event['event_id']}-dump-variants.txt"
-                event['dump_variants_url'] = f"{self._rel_url(node, ancestors)}/event_data/{filename}"
+                event['dump_variants_url'] = (
+                    f"{self._rel_url(node, ancestors)}/event_data/{filename}"
+                )
                 with open(event_data_target_dir / filename, 'w') as f:
                     f.write(f"{dump_variants}")
             else:
@@ -205,6 +207,3 @@ class UpdatingIterator:
     def __len__(self):
         """ Needed by django template """
         return len(self._items)
-
-
-

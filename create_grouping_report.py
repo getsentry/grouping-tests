@@ -1,3 +1,6 @@
+# pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-order
+# pylint: disable=ungrouped-imports
 # prelude of careful imports so django app is correctly initialized
 import os
 os.environ['SENTRY_SKIP_SERVICE_VALIDATION'] = "yes"
@@ -13,11 +16,10 @@ import glob
 import pickle
 import time
 from pathlib import Path
-from typing import List, Dict, Optional
-import os
+from typing import List, Optional
 from multiprocessing import Manager
 
-from sentry.event_manager import materialize_metadata
+from django.utils.timezone import now
 from sentry.eventstore.models import Event
 from sentry import get_version, _get_git_revision
 from sentry.grouping.api import get_default_enhancements
@@ -39,8 +41,10 @@ LOG = logging.getLogger(__name__)
 @click.option("--config", "-c", required=True, type=Path, multiple=True,
               help="Grouping config. Multiple will be merged left to right.")
 @click.option("--report-dir", required=True, type=Path, help="output directory")
-@click.option("--events-base-url", type=str, help="Base URL for JSON links. Defaults to --event-dir")
-@click.option("--num-workers", type=int, help="Parallelize. Default corresponds to Python multiprocessing default")
+@click.option("--events-base-url", type=str,
+              help="Base URL for JSON links. Defaults to --event-dir")
+@click.option("--num-workers", type=int,
+              help="Parallelize. Default corresponds to Python multiprocessing default")
 @click.option(
     "--pickle-dir",
     type=Path,
@@ -53,7 +57,7 @@ def create_grouping_report(event_dir: Path, config: List[Path], report_dir: Path
         events_base_url = f"file://{event_dir.absolute()}"
 
     if report_dir.exists():
-        LOG.error(f"Report dir {report_dir} already exists")
+        LOG.error("Report dir %s already exists", report_dir)
         sys.exit(1)
 
     os.makedirs(report_dir, exist_ok=True)
@@ -86,7 +90,8 @@ def create_grouping_report(event_dir: Path, config: List[Path], report_dir: Path
             if pickle_dir:
                 store_pickle(pickle_dir, project)
 
-        project.exemplar = None  # HACKish makes sure that project does not display hash, stack trace, etc.
+        # HACKish makes sure that project does not display hash, stack trace, etc.
+        project.exemplar = None
 
         ProjectReport(project, report_dir, events_base_url)
 
@@ -205,7 +210,6 @@ def extract_event_data(event: Event) -> dict:
 
 
 def write_metadata(report_dir: Path, config: dict):
-    from django.utils.timezone import now
     meta = {
         'generated': str(now()),
         'cli_args': sys.argv,

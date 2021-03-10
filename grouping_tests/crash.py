@@ -16,7 +16,7 @@ def get_crash_report(event: Event) -> Optional[str]:
     try:
         return _get_crash_report(event)
     except Exception as e:
-        LOG.warn("AppleCrashReport failed for event %s with exception %s", event.event_id, e)
+        LOG.warning("AppleCrashReport failed for event %s with exception %s", event.event_id, e)
         return None
 
 

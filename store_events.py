@@ -1,8 +1,10 @@
+# pylint: disable=wrong-import-position
+# pylint: disable=wrong-import-order
+# pylint: disable=ungrouped-imports
 # prelude of careful imports so django app is correctly initialized
 from sentry.runner import configure
 configure()
 
-import logging
 import click
 from multiprocessing import Manager
 import sys
@@ -19,6 +21,9 @@ import sentry_sdk
 sentry_sdk.init("")
 
 
+global_output_dir = None  # Used in fetch_and_store
+
+
 @click.command()
 @click.option("--output-dir", required=True, type=Path)
 @click.option("--num-workers", type=int, help="Defaults to Python multiprocessing default")
@@ -27,11 +32,12 @@ def store_events(output_dir: Path, num_workers: int):
 
     Usage example:
 
-        clickhouse-client --query 'SELECT project_id, event_id FROM sentry_local LIMIT 100' | python store_events.py --output-dir ./events
+        clickhouse-client --query 'SELECT project_id, event_id FROM sentry_local LIMIT 100' \\
+            | python store_events.py --output-dir ./events
 
     """
-    global global_output_dir
-    global_output_dir = output_dir  # Used in fetch_and_store
+    global global_output_dir  # pylint: disable=global-statement
+    global_output_dir = output_dir
 
     if output_dir.exists():
         print(f"ERROR: Output dir {output_dir} already exists")
@@ -44,7 +50,7 @@ def store_events(output_dir: Path, num_workers: int):
 
     print("Fetching event payloads...")
     with Manager() as manager:
-        with manager.Pool(num_workers) as pool:
+        with manager.Pool(num_workers) as pool:  # type: ignore
             tasks = pool.imap_unordered(fetch_and_store, lines)
             progress_bar = click.progressbar(tasks, length=len(lines))
 

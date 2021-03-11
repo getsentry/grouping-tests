@@ -28,7 +28,7 @@ sentry_sdk.init("")
 
 from grouping_tests.groups.base import GroupNode, HashData
 from grouping_tests.report import HTMLReport, ProjectReport
-from grouping_tests.crash import get_crash_report, dump_variants
+from grouping_tests.crash import get_crash_report, dump_variants, get_stacktrace_render
 
 
 LOG = logging.getLogger(__name__)
@@ -170,6 +170,7 @@ class EventProcessor:
         # Seems abundant to do this for every event, but it's faster
         # than synchronising between processes when to generate
         item['crash_report'] = get_crash_report(event)
+        item['stacktrace_render'] = get_stacktrace_render(event)
         item['dump_variants'] = dump_variants(self._config, event)
 
         return flat, hierarchical, item

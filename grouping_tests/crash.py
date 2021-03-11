@@ -33,6 +33,43 @@ def _get_crash_report(event: Event) -> str:
     )
 
 
+def get_stacktrace_render(event: Event) -> Optional[str]:
+    try:
+        return _get_stacktrace_render(event)
+    except Exception as e:
+        LOG.warn("stacktrace render failed for event %s with exception %s", event.event_id, e)
+        return None
+
+
+def _get_stacktrace_render(event: Event) -> str:
+    """
+    Platform agnostic stacktrace renderer for Java
+    """
+    rv = []
+    for threads_type, threads in [
+        ("Exception", get_path(event.data, "exception", "values", filter=True)),
+        ("Thread", get_path(event.data, "threads", "values", filter=True)),
+    ]:
+        for thread in threads or ():
+            ty = get_path(thread, "type") or "_"
+            value = get_path(thread, "value") or "_"
+            thread_id = get_path(thread, "id") or "_"
+            crashed = get_path(thread, "crashed", default="_")
+            rv.append("")
+            rv.append("")
+            rv.append(f"{threads_type} {ty}:{value} (thread_id:{thread_id}, crashed:{crashed})")
+
+            for frame in get_path(thread, "stacktrace", "frames", filter=True) or ():
+                module = (get_path(frame, "module") or get_path(frame, "filename") or get_path(frame, "abs_path") or "")[:42].rjust(42)
+                function = get_path(frame, "function") or "???"
+                addr = get_path(frame, "instruction_addr") or ""
+                if addr:
+                    addr = addr.rjust(12)
+                rv.append(f"  {module} {addr} {function}")
+
+    return "\n".join(rv)
+
+
 def dump_variants(config, event: Event) -> str:
     # Copied from sentry/tests/sentry/grouping/test_variants.py
     rv: List[str] = []

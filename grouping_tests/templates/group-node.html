@@ -38,6 +38,10 @@
                 {% include 'modal.html' %}
             {% endwith %}
 
+            {% with modal_name='Stacktrace Render' modal_id='stacktrace_render' modal_data=node.exemplar.stacktrace_render %}
+                {% include 'modal.html' %}
+            {% endwith %}
+
             {% with modal_name='Variants' modal_id='dump_variants' modal_data=node.exemplar.dump_variants %}
                 {% include 'modal.html' %}
             {% endwith %}

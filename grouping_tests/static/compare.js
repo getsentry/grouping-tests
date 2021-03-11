@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Clear all compare state when modal is closed
     document.getElementById("compare-modal").addEventListener('hidden.bs.modal', function () {
+        document.getElementById("compare-modal-body").innerHTML = '';
         setCompareState(() => {
             localStorage.removeItem("compare-left-url");
             localStorage.removeItem("compare-right-url");
@@ -89,27 +90,38 @@ function renderCompareModal() {
 
 function compareEvents() {
     const leftURL = localStorage.getItem("compare-left-url");
-    load(leftURL, function (left) {
-        const rightURL = localStorage.getItem("compare-right-url");
-        load(rightURL, function (right) {
+    const rightURL = localStorage.getItem("compare-right-url");
 
-            const diff = difflib.unifiedDiff(
-                left.split('\n'),
-                right.split('\n'),
-                {n: 1000}, // Make sure the whole file is visible
-            );
+    document.getElementById("compare-modal-body").innerHTML = "Loading...";
 
-            const fullDiff = "diff --git a/foo b/foo\n" + diff.join("\n");
+    var left = null;
+    var right = null;
 
-            var diffHtml = Diff2Html.html(fullDiff, {
-                drawFileList: false,
-                matching: 'lines',
-                outputFormat: 'side-by-side'
-            });
+    function onSuccess() {
 
-            document.getElementById("compare-modal-body").innerHTML = diffHtml;
+        if( !(left && right) ) {
+            return;
+        }
+
+        const diff = difflib.unifiedDiff(
+            left.split('\n'),
+            right.split('\n'),
+            {n: 1000}, // Make sure the whole file is visible
+        );
+
+        const fullDiff = "diff --git a/foo b/foo\n" + diff.join("\n");
+
+        var diffHtml = Diff2Html.html(fullDiff, {
+            drawFileList: false,
+            matching: 'lines',
+            outputFormat: 'side-by-side'
         });
-    });
+
+        document.getElementById("compare-modal-body").innerHTML = diffHtml;
+    }
+
+    load(leftURL, data => { left = data; onSuccess(); });
+    load(rightURL, data => { right = data; onSuccess(); });
 }
 
 function load(url, callback) {

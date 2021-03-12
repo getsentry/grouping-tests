@@ -32,6 +32,7 @@
     {% if hash %}<p class="text-muted">Hash: {{ hash }}</p>{% endif %}
     {% if node.label %}<p class="text-muted">Label: {{ node.label }}</p>{% endif %}
 
+
     {% if node.exemplar %}
         <div class="btn-group btn-group-sm" role="group">
             {% with modal_name='Crash Report' modal_id='crash_report' modal_data=node.exemplar.crash_report %}

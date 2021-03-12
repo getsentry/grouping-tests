@@ -30,7 +30,8 @@ sentry_sdk.init("")
 
 from grouping_tests.groups.base import GroupNode, HashData
 from grouping_tests.report import HTMLReport, ProjectReport
-from grouping_tests.crash import get_crash_report, dump_variants, get_stacktrace_render
+from grouping_tests.crash import (
+    get_crash_report, dump_variants, get_stacktrace_render, get_stacktrace_preview)
 
 
 LOG = logging.getLogger(__name__)
@@ -169,8 +170,12 @@ class EventProcessor:
         flat = self._get_hashes(flat_variants)
         hierarchical = self._get_hashes(hierarchical_variants)
 
+
         item = extract_event_data(event)
         item['json_url'] = Path(filename).relative_to(self._event_dir)
+
+        item['stacktrace_preview'] = get_stacktrace_preview(
+            hierarchical_variants if hierarchical else flat_variants)
 
         # Seems abundant to do this for every event, but it's faster
         # than synchronising between processes when to generate

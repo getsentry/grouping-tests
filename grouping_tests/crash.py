@@ -1,11 +1,12 @@
 import json
 import logging
-from typing import List, Optional
+from typing import List, Optional, Generator
 
 from sentry.eventstore.models import Event
 from sentry.lang.native.applecrashreport import AppleCrashReport
 from sentry.utils.safe import get_path
 from sentry.grouping.component import GroupingComponent
+from sentry.grouping.variants import BaseVariant
 
 
 LOG = logging.getLogger(__name__)
@@ -119,3 +120,39 @@ def _dump_variant(variant, lines=None, indent=0):
             lines.append("{}{}: {}".format("  " * indent, key, json.dumps(value)))
 
     return lines
+
+
+def get_stacktrace_preview(variants: List[BaseVariant]) -> str:
+    """ Compact text repr of contributing stack frames """
+    previews = list(_get_stacktrace_preview(variants))
+    column_widths = [max(map(len, col)) for col in zip(*previews)]
+    return "\n".join([
+        "    ".join(col.ljust(column_width) for col, column_width in zip(preview, column_widths))
+        for preview in previews
+    ])
+
+
+def _get_stacktrace_preview(variants: List[BaseVariant]) -> Generator:
+    seen = set()
+    for variant in variants:
+        for frame in variant.component.iter_subcomponents(
+            id="frame",recursive=True, only_contributing=True
+        ):
+            module = _extract_value(frame, "module", "filename")
+            function = _extract_value(frame, "function")
+
+            preview = (module, function)
+            # Because multiple variants inspect the same frame, we only keep one instance.
+            # The order should be OK.
+            if preview not in seen:
+                seen.add(preview)
+                yield preview
+
+
+def _extract_value(component, *ids) -> str:
+    for id_ in ids:
+        subcomponent = component.get_subcomponent(id=id_)
+        if subcomponent and subcomponent.values:
+            return subcomponent.values[0]
+
+    return ""

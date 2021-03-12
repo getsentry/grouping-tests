@@ -41,10 +41,12 @@
 
             </div>
         </div>
-        {% if node.exemplar.subtitle %}
+        {% if node.exemplar.subtitle or node.exemplar.stacktrace_preview %}
             <div class="card-body">
 
                 <p>{{ node.exemplar.subtitle }}</p>
+
+                <pre class="border bg-light"><small>{{ node.exemplar.stacktrace_preview }}</small></pre>
             </div>
         {% endif %}
     </div>

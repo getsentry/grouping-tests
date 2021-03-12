@@ -30,6 +30,7 @@ class HTMLReport:
         _render_to_file("report.html", parent_dir / "index.html", {
             'projects': sorted(projects),
             'metadata': json.dumps(metadata, indent=4),
+            'report_dir': parent_dir.stem,
         })
 
     @staticmethod
@@ -63,6 +64,7 @@ class ProjectReport:
         output_path = self._html_path(node, ancestors)
 
         _render_to_file("group-node.html", output_path, {
+            'report_dir': self._root_dir.stem,
             'title': _node_title(node),
             'subtitle': _node_subtitle(node),
             'hash': _node_hash(node),

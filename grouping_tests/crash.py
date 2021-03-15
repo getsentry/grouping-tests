@@ -61,7 +61,7 @@ def _get_stacktrace_render(event: Event) -> str:
             rv.append(f"{threads_type} {ty}:{value} (thread_id:{thread_id}, crashed:{crashed})")
 
             for frame in get_path(thread, "stacktrace", "frames", filter=True) or ():
-                module = (get_path(frame, "module") or get_path(frame, "filename") or get_path(frame, "abs_path") or "")[:42].rjust(42)
+                module = (get_path(frame, "package") or get_path(frame, "module") or get_path(frame, "filename") or get_path(frame, "abs_path") or "")[:42].rjust(42)
                 function = get_path(frame, "function") or "???"
                 addr = get_path(frame, "instruction_addr") or ""
                 if addr:

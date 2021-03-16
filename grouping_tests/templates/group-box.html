@@ -47,8 +47,9 @@
                 <div class="card-body">
 
                     <p>{{ node.exemplar.subtitle }}</p>
-
-                    <pre class="border bg-light"><small>{{ node.exemplar.stacktrace_preview }}</small></pre>
+                    {% if node.exemplar.stacktrace_preview %}
+                        <pre class="stacktrace-preview collapsed border bg-light"><small>{{ node.exemplar.stacktrace_preview }}</small></pre>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>

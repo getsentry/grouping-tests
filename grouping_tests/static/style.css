@@ -62,10 +62,7 @@ pre {
   font-size: 10pt;
 }
 
-.card-body pre {
+.stacktrace-preview.collapsed {
   max-height: 6em;
   overflow: hidden;
-}
-.card-body pre:hover {
-  max-height: fit-content;
 }

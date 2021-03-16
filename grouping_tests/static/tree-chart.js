@@ -52,9 +52,6 @@ function renderTreeChart(data, weighItemCount) {
         .append("rect")
         .attr("width", (d) => {
             const w = d.x1 - d.x0;
-            if (w == 0) {
-                console.log(d);
-            }
             return w;
         })
         .attr("height", (d) => d.y1 - d.y0)

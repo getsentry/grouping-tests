@@ -1,61 +1,64 @@
-<div class="clearfix">
-    <div class="card mb-1">
-        <div class="card-header">
-            <div class="float-start">
-                {% if node.children %}
-                    <span
-                        class="collapser"
-                        id="collapser-{{ node.name }}"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#children-of-{{ node.name }}"
-                        aria-expanded="true"
-                        aria-controls="children-of-{{ node.name }}"
-                        style="margin-left: -.5rem;"
-                    >
-                        <span class="text-muted">
-                            <i class="bi-chevron-right"></i>
+<div class="group-box">
+
+    <div class="clearfix">
+        <div class="card mb-1">
+            <div class="card-header">
+                <div class="float-start">
+                    {% if node.children %}
+                        <span
+                            class="collapser"
+                            id="collapser-{{ node.name }}"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#children-of-{{ node.name }}"
+                            aria-expanded="true"
+                            aria-controls="children-of-{{ node.name }}"
+                            style="margin-left: -.5rem;"
+                        >
+                            <span class="text-muted">
+                                <i class="bi-chevron-right"></i>
+                            </span>
                         </span>
-                    </span>
-                {% endif %}
-                <a href="{{ url }}">{{ node.exemplar.title }}</a>
-                <small class="text-muted">
-                    {% if node.label %}
-                        {{ node.label }}
-                    {% else %}
-                        {{ node.exemplar.culprit|default_if_none:"" }}
                     {% endif %}
-                </small>
-            </div>
-            <div class="float-end text-muted">
-                <span title="events in this node">
-                    <i class="bi-paperclip"></i> {{ node.item_count }}
-                </span>
-                /
-                <span title="events in subtree">
-                    <i class="bi-diagram-2-fill"></i> {{ node.total_item_count }}
-                </span>
+                    <a href="{{ url }}">{{ node.exemplar.title }}</a>
+                    <small class="text-muted">
+                        {% if node.label %}
+                            {{ node.label }}
+                        {% else %}
+                            {{ node.exemplar.culprit|default_if_none:"" }}
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="float-end text-muted">
+                    <span title="events in this node">
+                        <i class="bi-paperclip"></i> {{ node.item_count }}
+                    </span>
+                    /
+                    <span title="events in subtree">
+                        <i class="bi-diagram-2-fill"></i> {{ node.total_item_count }}
+                    </span>
 
-                <span class="event-tools">
-                    <a href="{{ home }}{{ node.exemplar.dump_variants_url }}" class="compare-events" title="Compare"><i></i></a>
-                </span>
+                    <span class="event-tools">
+                        <a href="{{ home }}{{ node.exemplar.dump_variants_url }}" class="compare-events" title="Compare"><i></i></a>
+                    </span>
 
+                </div>
             </div>
+            {% if node.exemplar.subtitle or node.exemplar.stacktrace_preview %}
+                <div class="card-body">
+
+                    <p>{{ node.exemplar.subtitle }}</p>
+
+                    <pre class="border bg-light"><small>{{ node.exemplar.stacktrace_preview }}</small></pre>
+                </div>
+            {% endif %}
         </div>
-        {% if node.exemplar.subtitle or node.exemplar.stacktrace_preview %}
-            <div class="card-body">
-
-                <p>{{ node.exemplar.subtitle }}</p>
-
-                <pre class="border bg-light"><small>{{ node.exemplar.stacktrace_preview }}</small></pre>
-            </div>
-        {% endif %}
     </div>
+
+    {% if node.children %}
+        <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3" data-handle="collapser-{{ node.name }}">
+            {% for node, url, children in children %}
+                {% include 'group-box.html' %}
+            {% endfor %}
+        </div>
+    {% endif %}
 </div>
-
-{% if node.children %}
-    <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3" data-handle="collapser-{{ node.name }}">
-        {% for node, url, children in children %}
-            {% include 'group-box.html' %}
-        {% endfor %}
-    </div>
-{% endif %}

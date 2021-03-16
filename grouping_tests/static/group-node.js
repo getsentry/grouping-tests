@@ -49,7 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const issueFilter = document.getElementById('issue-filter');
+    if(issueFilter) issueFilter.addEventListener('input', event => {
+        const searchString = event.target.value.toLowerCase();
+        document.querySelectorAll('.group-box').forEach(el => {
+            if(el.textContent.toLowerCase().search(searchString) >= 0) {
+                el.classList.remove('d-none');
+            } else {
+                el.classList.add('d-none');
+            }
+        });
+    })
+
 });
-
-
-

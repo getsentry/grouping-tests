@@ -1,0 +1,71 @@
+body {
+  font-family: Rubik, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
+    Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+  color: #362d59;
+}
+
+nav.bg-dark {
+  background: rgb(69, 38, 80) !important;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  color: #274d94;
+}
+
+a,
+.btn-outline-primary,
+.btn-outline-primary:disabled {
+  color: #3b6ecc;
+}
+
+.btn-outline-primary,
+.btn-outline-primary:hover {
+  border-color: #3b6ecc;
+}
+.btn-outline-primary:hover {
+  background-color: #3b6ecc;
+}
+
+.text-muted,
+.breadcrumb-item.active {
+  color: #9093c1;
+}
+
+pre {
+  font-family: IBM Plex, Menlo, Monaco, Consolas, Courier New, monospace;
+}
+
+/* diff2html tweaks */
+.d2h-file-header {
+  display: none;
+}
+
+.event-list .list-group-item .event-tools a {
+  display: none;
+}
+.event-list .list-group-item .event-tools a.selected {
+  display: inline;
+}
+.event-list .list-group-item:hover .event-tools a {
+  display: inline;
+}
+
+#tree-chart a {
+  text-decoration: none;
+}
+
+#tree-chart text {
+  font-size: 10pt;
+}
+
+.card-body pre {
+  max-height: 6em;
+  overflow: hidden;
+}
+.card-body pre:hover {
+  max-height: fit-content;
+}

@@ -135,9 +135,16 @@ def get_stacktrace_preview(variants: List[BaseVariant]) -> str:
 def _get_stacktrace_preview(variants: List[BaseVariant]) -> Generator:
     seen = set()
     for variant in variants:
+
+        if not hasattr(variant, 'component'):
+            continue
+
         for frame in variant.component.iter_subcomponents(
             id="frame",recursive=True, only_contributing=True
         ):
+            if not frame.contributes:  # Check can be removed once sentry PR 24411 has been merged
+                continue
+
             module = _extract_value(frame, "module", "filename")
             function = _extract_value(frame, "function")
 

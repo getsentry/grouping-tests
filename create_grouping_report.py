@@ -22,7 +22,8 @@ from multiprocessing import Manager
 from django.utils.timezone import now
 from sentry.eventstore.models import Event
 from sentry import get_version, _get_git_revision
-from sentry.grouping.api import Enhancements, get_default_enhancements
+from sentry.grouping.api import Enhancements
+from sentry.projectoptions.defaults import DEFAULT_GROUPING_ENHANCEMENTS_BASE
 from sentry.grouping.variants import BaseVariant, ComponentVariant
 
 import sentry_sdk
@@ -84,7 +85,7 @@ def create_grouping_report(event_dir: Path, config: List[Path], enhancements: Li
 
     config_dict['enhancements'] = Enhancements.from_config_string(
         "\n".join(enhancements_list),
-        bases=config_dict.pop("enhancement_bases", None) or get_default_enhancements().bases
+        bases=config_dict.pop("enhancement_bases", None) or [DEFAULT_GROUPING_ENHANCEMENTS_BASE]
     ).dumps()
 
     report_metadata = write_metadata(report_dir, config_dict)

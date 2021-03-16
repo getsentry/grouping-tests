@@ -113,8 +113,10 @@ function initFavorites() {
         var favorites = new Set(favoritesStr.split(","));
         favorites.forEach(nodeName => {
             const el = document.getElementById("favorite-" + nodeName);
-            el.classList.add('bi-star-fill');
-            el.classList.remove('bi-star');
+            if(el) {
+                el.classList.add('bi-star-fill');
+                el.classList.remove('bi-star');
+            }
         })
     }
 }

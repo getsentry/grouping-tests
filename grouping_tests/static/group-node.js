@@ -72,4 +72,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.querySelectorAll('.favorite').forEach(el => {
+        el.addEventListener('click', (event) => {
+            event.preventDefault();
+            if(el.classList.contains('bi-star-fill')) {
+                el.classList.remove('bi-star-fill');
+                el.classList.add('bi-star');
+                removeFavorite(el.dataset.node);
+            } else {
+                el.classList.add('bi-star-fill');
+                el.classList.remove('bi-star');
+                addFavorite(el.dataset.node);
+            }
+        });
+    });
+
+    initFavorites();
+
 });
+
+function addFavorite(nodeName) {
+    const favorites = localStorage.getItem("favorites");
+    localStorage.setItem("favorites",
+        favorites ? (favorites + "," + nodeName) : nodeName
+    );
+}
+
+function removeFavorite(nodeName) {
+    const favoritesStr = localStorage.getItem("favorites");
+    if(favoritesStr) {
+        var favorites = new Set(favoritesStr.split(","));
+        favorites.delete(nodeName);
+        localStorage.setItem("favorites", Array.from(favorites).join(","));
+    }
+}
+
+function initFavorites() {
+    const favoritesStr = localStorage.getItem("favorites");
+    if(favoritesStr) {
+        var favorites = new Set(favoritesStr.split(","));
+        favorites.forEach(nodeName => {
+            const el = document.getElementById("favorite-" + nodeName);
+            el.classList.add('bi-star-fill');
+            el.classList.remove('bi-star');
+        })
+    }
+}

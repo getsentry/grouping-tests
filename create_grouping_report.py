@@ -22,7 +22,7 @@ from multiprocessing import Manager
 from django.utils.timezone import now
 from sentry.eventstore.models import Event
 from sentry import get_version, _get_git_revision
-from sentry.grouping.api import get_default_enhancements
+from sentry.grouping.api import Enhancements, get_default_enhancements
 from sentry.grouping.variants import BaseVariant, ComponentVariant
 
 import sentry_sdk
@@ -41,6 +41,8 @@ LOG = logging.getLogger(__name__)
 @click.option("--event-dir", required=True, type=Path, help="created using store_events.py")
 @click.option("--config", "-c", required=True, type=Path, multiple=True,
               help="Grouping config. Multiple will be merged left to right.")
+@click.option("--enhancements", type=Path, multiple=True,
+              help="Additional enhancement files to add to grouping config")
 @click.option("--report-dir", required=True, type=Path, help="output directory")
 @click.option("--events-base-url", type=str,
               help="Base URL for JSON links. Defaults to --event-dir")
@@ -50,7 +52,7 @@ LOG = logging.getLogger(__name__)
     "--pickle-dir",
     type=Path,
     help="If set, cache issue trees as pickles. Useful for development.")
-def create_grouping_report(event_dir: Path, config: List[Path], report_dir: Path,
+def create_grouping_report(event_dir: Path, config: List[Path], enhancements: List[Path], report_dir: Path,
                            events_base_url: str, pickle_dir: Path, num_workers: int):
     """ Create a grouping report """
 
@@ -66,10 +68,24 @@ def create_grouping_report(event_dir: Path, config: List[Path], report_dir: Path
     if pickle_dir:
         os.makedirs(pickle_dir, exist_ok=True)
 
-    config_dict = _default_config()
+    config_dict = {}
     for config_path in config:
         with open(config_path, 'r') as config_file:
             config_dict.update(**json.load(config_file))
+
+    if enhancements and 'enhancements' in config_dict:
+        LOG.error("enhancements already specified in config, cannot use --enhancements")
+        sys.exit(1)
+
+    enhancements_list = []
+    for enhancement_path in enhancements:
+        with open(enhancement_path, 'r') as enhancement_file:
+            enhancements_list.extend(enhancement_file)
+
+    config_dict['enhancements'] = Enhancements.from_config_string(
+        "\n".join(enhancements_list),
+        bases=config_dict.pop("enhancement_bases", None) or get_default_enhancements().bases
+    ).dumps()
 
     report_metadata = write_metadata(report_dir, config_dict)
 
@@ -242,10 +258,6 @@ def store_pickle(pickle_dir: Path, project: GroupNode):
     filename = pickle_dir / f"{project.name}.pickle"
     with open(filename, 'wb') as f:
         pickle.dump(project, file=f)
-
-
-def _default_config() -> dict:
-    return {'enhancements': get_default_enhancements()}
 
 
 if __name__ == "__main__":

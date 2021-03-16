@@ -49,3 +49,9 @@ serve the report from a web server, e.g.
 ```bash
 python3 -m http.server
 ```
+
+### TODO
+
+#### Nice to haves
+
+- [ ] Diff anything in node compare (apple crash report, stack trace variants)

@@ -22,9 +22,10 @@ from multiprocessing import Manager
 from django.utils.timezone import now
 from sentry.eventstore.models import Event
 from sentry import get_version, _get_git_revision
-from sentry.grouping.api import Enhancements
+from sentry.grouping.api import Enhancements, load_grouping_config
 from sentry.projectoptions.defaults import DEFAULT_GROUPING_ENHANCEMENTS_BASE
 from sentry.grouping.variants import BaseVariant, ComponentVariant
+from sentry.stacktraces.processing import normalize_stacktraces_for_grouping
 
 import sentry_sdk
 sentry_sdk.init("")
@@ -163,6 +164,7 @@ class EventProcessor:
     def __init__(self, event_dir, config, project_id):
         self._event_dir = event_dir
         self._config = config
+        self._structured_config = None  # pickling workaround
         self._project_id = project_id
         self._seen = set()
 
@@ -176,6 +178,11 @@ class EventProcessor:
     def _process(self, filename):
         with open(filename, 'r') as file_:
             event_data = json.load(file_)
+
+        if self._structured_config is None:
+            self._structured_config = load_grouping_config(self._config)
+
+        normalize_stacktraces_for_grouping(event_data, grouping_config=self._structured_config)
         event_id = event_data['event_id']
         event = Event(
             self._project_id, event_id, group_id=None, data=event_data)

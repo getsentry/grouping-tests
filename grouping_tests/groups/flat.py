@@ -34,8 +34,7 @@ class FlatInserter(Inserter):
             else:
                 # Add event to a new group
                 name = "-".join(d.hash for d in flat_hashes)
-                label = ", ".join(d.label or "" for d in flat_hashes)
-                group = self._get_child(name, label)
+                group = self._get_child(name, None)
                 for d in flat_hashes:
                     self._lookup[d.hash] = group
 

@@ -10,6 +10,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 from grouping_tests.groups.base import GroupNode
+from grouping_tests.crash import extract_stacktrace_preview
 
 
 LOG = logging.getLogger(__name__)
@@ -47,6 +48,15 @@ class ProjectReport:
         self._root_dir = parent_dir
         self._events_base_url = events_base_url
         self._current_depth = 0
+
+        # Add a full label path for each node
+        set_labels(root)
+
+        # Generate stacktrace previews:
+        for node, _ in root.nodes():
+            item = node.exemplar or {}
+            if 'stacktrace_render' in item and 'stacktrace_preview' not in item:
+                item['stacktrace_preview'] = extract_stacktrace_preview(item['stacktrace_render'])
 
         # Write grouping variants to disk for each event
         LOG.info("Project %s: Writing event data...", root.name)
@@ -190,6 +200,26 @@ def _node_to_d3(node: GroupNode, ancestors=None) -> dict:
         "item_count": node.item_count,
         "children": children,
     }
+
+
+def set_labels(node, ancestors = None):
+    """ Attach full label path to node """
+    if ancestors is None:
+        ancestors = []
+
+    node.depth = len(ancestors)
+
+    if node.children:
+        for i, child in enumerate(node.children.values()):
+            labels = set_labels(child, ancestors + [node])
+            if i == 0:
+                node.labels = labels
+    else:
+        # Leaf node:
+        node.labels = [ancestor.label for ancestor in ancestors] + [node.label]
+
+    node.has_labels = node.labels and any(node.labels)
+    return node.labels
 
 
 class UpdatingIterator:

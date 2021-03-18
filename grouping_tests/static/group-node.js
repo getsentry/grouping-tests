@@ -61,17 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.querySelectorAll('.stacktrace-preview').forEach(el => {
-        el.addEventListener('click', (event) => {
-            event.preventDefault();
-            if(el.classList.contains('collapsed')) {
-                el.classList.remove('collapsed');
-            } else {
-                el.classList.add('collapsed');
-            }
-        });
-    });
-
     document.querySelectorAll('.favorite').forEach(el => {
         el.addEventListener('click', (event) => {
             event.preventDefault();

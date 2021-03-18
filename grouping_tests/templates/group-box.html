@@ -21,9 +21,7 @@
                     {% endif %}
                     <a href="{{ url }}">{{ node.exemplar.title }}</a>
                     <small class="text-muted">
-                        {% if node.label %}
-                            {{ node.label }}
-                        {% else %}
+                        {% if not node.label %}
                             {{ node.exemplar.culprit|default_if_none:"" }}
                         {% endif %}
                     </small>
@@ -46,12 +44,24 @@
 
                 </div>
             </div>
-            {% if node.exemplar.subtitle or node.exemplar.stacktrace_preview %}
+            {% if node.exemplar.subtitle or node.has_labels or node.exemplar.stacktrace_preview %}
                 <div class="card-body">
 
                     <p>{{ node.exemplar.subtitle }}</p>
-                    {% if node.exemplar.stacktrace_preview %}
-                        <pre class="stacktrace-preview collapsed border bg-light"><small>{{ node.exemplar.stacktrace_preview }}</small></pre>
+                    {% if node.has_labels %}
+                        <div class="border bg-light">
+                            {% for label in node.labels %}
+                                {% if label %}
+                                    {% if node.depth == forloop.counter0 %}
+                                        <pre class="preview-line fw-bold"><small>{{ label }}</small></pre>
+                                    {% else %}
+                                        <pre class="preview-line"><small>{{ label }}</small></pre>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% elif node.exemplar.stacktrace_preview %}
+                        <pre class="border bg-light"><small>{{ node.exemplar.stacktrace_preview }}</small></pre>
                     {% endif %}
                 </div>
             {% endif %}

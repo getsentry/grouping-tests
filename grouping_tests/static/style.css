@@ -62,7 +62,6 @@ pre {
   font-size: 10pt;
 }
 
-.stacktrace-preview.collapsed {
-  max-height: 6em;
-  overflow: hidden;
+.preview-line {
+  margin-bottom: 0;
 }

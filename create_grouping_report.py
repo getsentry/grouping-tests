@@ -34,7 +34,7 @@ sentry_sdk.init("")
 from grouping_tests.groups.base import GroupNode, HashData
 from grouping_tests.report import HTMLReport, ProjectReport
 from grouping_tests.crash import (
-    get_crash_report, dump_variants, get_stacktrace_render, get_stacktrace_preview)
+    get_crash_report, dump_variants, get_stacktrace_render)
 
 
 LOG = logging.getLogger(__name__)
@@ -55,7 +55,8 @@ LOG = logging.getLogger(__name__)
     "--pickle-dir",
     type=Path,
     help="If set, cache issue trees as pickles. Useful for development.")
-def create_grouping_report(event_dir: Path, config: List[Path], enhancements: List[Path], report_dir: Path,
+def create_grouping_report(event_dir: Path, config: List[Path], enhancements: List[Path],
+                           report_dir: Path,
                            events_base_url: str, pickle_dir: Path, num_workers: int):
     """ Create a grouping report """
 
@@ -202,9 +203,6 @@ class EventProcessor:
 
         item = extract_event_data(event)
         item['json_url'] = Path(filename).relative_to(self._event_dir)
-
-        item['stacktrace_preview'] = get_stacktrace_preview(
-            hierarchical_variants if hierarchical else flat_variants)
 
         # Seems abundant to do this for every event, but it's faster
         # than synchronising between processes when to generate

@@ -26,6 +26,7 @@ from sentry.grouping.api import Enhancements, load_grouping_config
 from sentry.projectoptions.defaults import DEFAULT_GROUPING_ENHANCEMENTS_BASE
 from sentry.grouping.variants import BaseVariant, ComponentVariant
 from sentry.stacktraces.processing import normalize_stacktraces_for_grouping
+from sentry.event_manager import materialize_metadata, get_culprit
 
 import sentry_sdk
 sentry_sdk.init("")
@@ -183,6 +184,10 @@ class EventProcessor:
             self._structured_config = load_grouping_config(self._config)
 
         normalize_stacktraces_for_grouping(event_data, grouping_config=self._structured_config)
+        event_data.pop("metadata", None)
+        event_data.pop("culprit", None)
+        event_data['culprit'] = get_culprit(event_data)
+        event_data.update(materialize_metadata(event_data))
         event_id = event_data['event_id']
         event = Event(
             self._project_id, event_id, group_id=None, data=event_data)

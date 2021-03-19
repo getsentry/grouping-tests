@@ -1,6 +1,6 @@
 <div class="group-box">
 
-    <div class="clearfix">
+    <div class="clearfix parent">
         <div class="card mb-1">
             <div class="card-header">
                 <div class="float-start">
@@ -19,8 +19,8 @@
                             </span>
                         </span>
                     {% endif %}
-                    <a href="{{ url }}">{{ node.exemplar.title }}</a>
-                    <small class="text-muted">
+                    <a class="title" href="{{ url }}">{{ node.exemplar.title }}</a>
+                    <small class=" culprit text-muted">
                         {% if not node.label %}
                             {{ node.exemplar.culprit|default_if_none:"" }}
                         {% endif %}
@@ -47,7 +47,7 @@
             {% if node.exemplar.subtitle or node.has_labels or node.exemplar.stacktrace_preview %}
                 <div class="card-body">
 
-                    <p>{{ node.exemplar.subtitle }}</p>
+                    <p class="subtitle">{{ node.exemplar.subtitle }}</p>
                     {% if node.has_labels %}
                         <div class="border bg-light">
                             {% for label in node.labels %}
@@ -68,11 +68,13 @@
         </div>
     </div>
 
-    {% if node.children %}
-        <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3" data-handle="collapser-{{ node.name }}">
-            {% for node, url, children in children %}
-                {% include 'group-box.html' %}
-            {% endfor %}
-        </div>
-    {% endif %}
+    <div class="children">
+        {% if node.children %}
+            <div id="children-of-{{ node.name }}" class="collapse ms-5 mb-3" data-handle="collapser-{{ node.name }}">
+                {% for node, url, children in children %}
+                    {% include 'group-box.html' %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
 </div>

@@ -50,16 +50,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const issueFilter = document.getElementById('issue-filter');
-    if(issueFilter) issueFilter.addEventListener('input', event => {
-        const searchString = event.target.value.toLowerCase();
+    if(issueFilter) {
+
+        // Populate searchables:
         document.querySelectorAll('.group-box').forEach(el => {
-            if(el.textContent.toLowerCase().search(searchString) >= 0) {
-                el.classList.remove('d-none');
-            } else {
-                el.classList.add('d-none');
-            }
+            const content = el.querySelector(':scope > .parent').textContent;
+            el.dataset.searchableContent = content.toLowerCase();
         });
-    });
+
+        var updateFilter;
+        issueFilter.addEventListener('input', event => {
+            if(updateFilter) clearTimeout(updateFilter);
+            updateFilter = setTimeout(() => {
+                const searchString = event.target.value.toLowerCase();
+                document.querySelectorAll('#issues>.group-box').forEach(el => {
+                    showIfContains(el, searchString);
+                });
+            }, 200);
+        });
+    }
 
     document.querySelectorAll('.favorite').forEach(el => {
         el.addEventListener('click', (event) => {
@@ -107,5 +116,22 @@ function initFavorites() {
                 el.classList.remove('bi-star');
             }
         })
+    }
+}
+
+function showIfContains(el, searchString) {
+
+    var show = false;
+    el.querySelectorAll('.children > .group-box').forEach(child => {
+        // If any child contains the text, we can show the parent
+        show |= showIfContains(child);
+    });
+
+    // If necessary, really search
+    show = show || el.dataset.searchableContent.search(searchString) >= 0;
+    if( show ) {
+        el.classList.remove('d-none');
+    } else {
+        el.classList.add('d-none');
     }
 }

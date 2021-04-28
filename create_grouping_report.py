@@ -23,7 +23,7 @@ from django.utils.timezone import now
 from sentry.eventstore.models import Event
 from sentry import get_version, _get_git_revision
 from sentry.grouping.api import Enhancements, load_grouping_config
-from sentry.projectoptions.defaults import DEFAULT_GROUPING_ENHANCEMENTS_BASE
+from sentry.grouping.strategies.base import DEFAULT_GROUPING_ENHANCEMENTS_BASE
 from sentry.grouping.variants import BaseVariant, ComponentVariant
 from sentry.stacktraces.processing import normalize_stacktraces_for_grouping
 from sentry.event_manager import materialize_metadata, get_culprit

@@ -63,7 +63,8 @@ def store_events(output_dir: Path, num_workers: int):
 
 
 def fetch_and_store(line):
-    project_id, event_id = line.strip().split("\t").replace("-", "")
+    project_id, event_id = line.strip().split("\t")
+    event_id = event_id.replace("-", "")
     node_id = Event.generate_node_id(project_id, event_id)
     node = nodestore.get(node_id)  # pylint: disable=no-member
 

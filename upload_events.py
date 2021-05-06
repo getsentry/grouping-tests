@@ -38,3 +38,7 @@ def upload_events(event_dir, dsn, expire_days):
 
 
     print(f"Done. Elapsed time is {time.time() - now} secs.")
+
+
+if __name__ == "__main__":
+    upload_events()  # pylint: disable=no-value-for-parameter

@@ -47,12 +47,19 @@ def dump_events( project_id: int, org_slug: str, project_slug: str, file_name:Pa
 
         # write a header with the number of events (so we can support progress bars downstream)
         _write_doc_separator(output_file)
-        json.dump({"num_events": len(events)},output_file, separators=(',',':'))
+        json.dump({"max_events": max_events},output_file, separators=(',',':'))
 
         print(f"# Dumping {len(events)} events...")
-        with click.progressbar(events) as events:
+        with click.progressbar(events, length=max_events) as events:
             for event in events:
                 _dump_object(event, output_file)
+
+
+def _get_events(event_filter, max_events):
+    offset = 0
+    while offset < max_events:
+        events = eventstore.get_events(event_filter, limit=min(500, max_events - offset), offset=offset)
+        yield from events
 
 
 def _write_doc_separator(file):

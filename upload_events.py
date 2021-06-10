@@ -59,7 +59,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
 
         header = next(events)
 
-        num_events = header.get("num_events")
+        num_events = header.get("max_events")
         if num_events is None:
             num_events = 1000  # just a guess
             print("Uploading events....")

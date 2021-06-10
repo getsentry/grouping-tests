@@ -13,6 +13,9 @@ import json
 from pathlib import Path
 import click
 
+import sentry_sdk
+sentry_sdk.init("")
+
 @click.command()
 @click.option("--project-id", type=int, help="The project numeric Id, an alternative to project slug")
 @click.option("--org-slug", type=str, help="The organization slug, an alternative to project id, if used must also provide project-slug")
@@ -74,8 +77,14 @@ def _write_doc_separator(file):
 
 
 def _dump_object(event, output_file):
+    try:
+        event_data = dict(event.data)
+    except Exception as e:
+        print(f"ERROR in event {event.event_id}: {e}")
+        return
+
     _write_doc_separator(output_file)
-    json.dump(dict(event.data), output_file, separators=(',',':'))
+    json.dump(event_data, output_file, separators=(',',':'))
 
 
 if __name__ == "__main__":

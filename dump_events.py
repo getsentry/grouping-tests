@@ -66,7 +66,7 @@ def _get_events(event_filter, max_events):
     offset = 0
 
     while offset < max_events:
-        events, state = celery_run_batch_query(event_filter, min(500, max_events - offset), "garbage.markus.dump-events", state=state)
+        state, events = celery_run_batch_query(event_filter, min(500, max_events - offset), "garbage.markus.dump-events", state=state)
         offset += len(events)
         yield from events
 
@@ -77,12 +77,7 @@ def _write_doc_separator(file):
 
 
 def _dump_object(event, output_file):
-    try:
-        event_data = dict(event.data)
-    except Exception as e:
-        print(f"ERROR in event {event.event_id}: {e}")
-        return
-
+    event_data = dict(event.data)
     _write_doc_separator(output_file)
     json.dump(event_data, output_file, separators=(',',':'))
 

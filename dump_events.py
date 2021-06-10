@@ -43,7 +43,7 @@ def dump_events( project_id: int, org_slug: str, project_slug: str, file_name:Pa
 
         print("Getting events....")
 
-        events=eventstore.get_events(event_filter,limit=max_events)
+        events=_get_events(event_filter, max_events=max_events)
 
         # write a header with the number of events (so we can support progress bars downstream)
         _write_doc_separator(output_file)

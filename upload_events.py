@@ -14,8 +14,8 @@ from queue import Queue
 from multiprocessing import cpu_count
 from threading import Thread
 
-from sentry.group_deletion import delete_group
-from sentry.models import Project, ProjectKey, Group, GroupStatus
+from wipe_project import delete_groups
+from sentry.models import Project, ProjectKey
 import sentry_sdk
 
 
@@ -50,15 +50,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
         project_id = int(dsn.split("/")[-1])
 
     if wipe_project:
-        groups = (Group.objects.filter(project_id=project_id).
-                  exclude(status__in=[GroupStatus.PENDING_DELETION, GroupStatus.DELETION_IN_PROGRESS]))
-
-        groups = list(groups)
-        print(f"Deleting {len(groups)} existing groups...")
-
-        with click.progressbar(groups) as groups:
-            for group in groups:
-                delete_group(group)
+        delete_groups(project_id)
 
     with open(file_name, "rt") as input_stream:
         now = time.time()

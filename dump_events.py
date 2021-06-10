@@ -56,9 +56,15 @@ def dump_events( project_id: int, org_slug: str, project_slug: str, file_name:Pa
 
 
 def _get_events(event_filter, max_events):
+    from sentry.utils.query import celery_run_batch_query
+
+    state = None
+
     offset = 0
+
     while offset < max_events:
-        events = eventstore.get_events(event_filter, limit=min(500, max_events - offset), offset=offset)
+        events, state = celery_run_batch_query(event_filter, min(500, max_events - offset), "garbage.markus.dump-events", state=state)
+        offset += len(events)
         yield from events
 
 

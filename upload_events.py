@@ -96,7 +96,8 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
 
 def _parse_lines(input_stream):
     for line in input_stream:
-        if line.strip() == "---":
+        line = line.strip()
+        if line == "---" or not line:
             continue
 
         yield json.loads(line)

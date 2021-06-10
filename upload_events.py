@@ -1,12 +1,7 @@
 from sentry.runner import configure
 configure()
 
-from yaml import load_all
-try:
-    from yaml import CLoader as Loader
-except ImportError:
-    from yaml import Loader
-
+import json
 import time
 import click
 from pathlib import Path
@@ -55,7 +50,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
     with open(file_name, "rt") as input_stream:
         now = time.time()
 
-        events = load_all(input_stream, Loader=Loader)
+        events = _parse_lines(input_stream)
 
         header = next(events)
 
@@ -98,6 +93,14 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
             worker.join()
 
         print(f"Done. Elapsed time is {time.time() - now} secs.")
+
+def _parse_lines(input_stream):
+    for line in input_stream:
+        line = line.strip()
+        if line == "---" or not line:
+            continue
+
+        yield json.loads(line)
 
 def worker_loop(dsn, queue):
     client = sentry_sdk.Client(dsn)

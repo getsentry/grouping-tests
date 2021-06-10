@@ -74,9 +74,8 @@ def _write_doc_separator(file):
 
 
 def _dump_object(event, output_file):
-    event_data = event.data.data
     _write_doc_separator(output_file)
-    json.dump(dict(event_data),output_file, separators=(',',':'))
+    json.dump(dict(event.data), output_file, separators=(',',':'))
 
 
 if __name__ == "__main__":

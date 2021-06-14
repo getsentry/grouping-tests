@@ -3,7 +3,9 @@ configure()
 
 import json
 import time
+import uuid
 import click
+from datetime import datetime
 from pathlib import Path
 from queue import Queue
 from multiprocessing import cpu_count
@@ -11,7 +13,11 @@ from threading import Thread
 
 from wipe_project import delete_groups
 from sentry.models import Project, ProjectKey
+from sentry.stacktraces.processing import find_stacktraces_in_data
+from sentry.utils.safe import get_path
 import sentry_sdk
+from sentry_sdk.utils import format_timestamp
+from sentry_sdk.envelope import Envelope
 
 
 sentry_sdk.init("")
@@ -25,9 +31,10 @@ StopWorking = "stop_working"
 @click.option("--project-id", type=int, help="the project id to be dumped, alternative to dsn, or (project-slug,org-slug)")
 @click.option("--project-slug", type=str, help="project slug, must also use org-slug, alternatively use project-id or dsn")
 @click.option("--org-slug", type=str, help="organization slug, must also use project-slug, alternatively use project-id or dsn")
-@click.option("--expire-days", default=0, type=int, help="sets timestamp in the past to influence retention")
+@click.option("--network-threads", default=64, help="How many threads to use for sending")
 @click.option("--wipe-project/--leave-project", default=False, type=bool, help="remove all existing messages from the project before import")
-def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str, org_slug: str, expire_days: int, wipe_project: bool):
+@click.option("--event-sleep", default=0, help="How many milliseconds to sleep between events")
+def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str, org_slug: str, wipe_project: bool, event_sleep: int, network_threads: int):
     """
     Reads events from a file (or named pipe) containing a multi doc yaml and sends them to a project.
 
@@ -61,31 +68,54 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
         else:
             print(f"Uploading {num_events} events....")
 
-        num_workers = cpu_count() * 2  # empirically 2* num_cpu seems to give the fastest performance
-        q = Queue(num_workers * 2 + 2)  # large enough so that workers do not wait
+        q = Queue(network_threads * 2 + 2)  # large enough so that workers do not wait
 
         workers = []
 
-        for i in range(num_workers):
+        for i in range(network_threads):
             t = Thread(target=worker_loop, args=(dsn, q))
             t.start()
             workers.append(t)
 
         with click.progressbar(events, length=num_events) as events2:
+            last_sleep = time.time()
+            event_count = 0
+
             for event in events2:
-                event.pop('event_id', None)
                 event.pop('project', None)
-                if expire_days:
-                    # Snuba retention is timestamp-based.
-                    event['timestamp'] = now - ((expire_days - 90) * 3600 * 24)
-                else:
-                    event.pop('timestamp', None)
                 event.pop('threads', None)
                 event.pop('debug_meta', None)
-                q.put(event)
+
+                for stacktrace_info in find_stacktraces_in_data(event):
+                    for frame in get_path(stacktrace_info.stacktrace, "frames", filter=True, default=()) or ():
+                        orig_in_app = get_path(frame, "data", "orig_in_app")
+                        if orig_in_app is not None:
+                            frame["in_app"] = None if orig_in_app == -1 else bool(orig_in_app)
+
+                event_id = event.pop('event_id', None)
+                event.setdefault("extra", {})['orig_event_id'] = event_id
+                event['event_id'] = event_id = str(uuid.uuid4().hex).replace("-", "")
+
+                envelope = Envelope(
+                    headers={
+                        "event_id": event_id,
+                        "sent_at": format_timestamp(datetime.utcnow())
+                    }
+                )
+
+                envelope.add_event(event)
+
+                q.put(envelope)
+
+                event_count += 1
+
+                if event_sleep and time.time() - last_sleep > 10 and event_count > 100:
+                    time.sleep(event_count * event_sleep / 1000.0)
+                    last_sleep = time.time()
+                    event_count = 0
 
         # send end of work signals to the workers, put a few more to be sure
-        for i in range(num_workers + 2):
+        for i in range(network_threads + 2):
             q.put(StopWorking)
 
         # wait for workers to finish
@@ -108,7 +138,11 @@ def worker_loop(dsn, queue):
         msg = queue.get()
         if msg == StopWorking:
             break
-        client.transport._send_event(msg)
+
+        client.transport._send_envelope(msg)
+
+    if client.transport._disabled_until:
+        print(f"WARNING: Hit rate limits: {client.transport._disabled_until}")
 
 
 if __name__ == "__main__":

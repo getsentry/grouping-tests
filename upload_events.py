@@ -83,7 +83,8 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
 
             for event in events2:
                 event.pop('project', None)
-                event.pop('threads', None)
+                if 'exception' in event:
+                    event.pop('threads', None)
                 event.pop('debug_meta', None)
 
                 for stacktrace_info in find_stacktraces_in_data(event):

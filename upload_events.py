@@ -97,7 +97,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                     message = event.pop("logentry")['formatted']
 
                     threads = event.pop("threads")['values']
-                    thread = next(x for x in threads if x.get('current'), threads[0])
+                    thread = next((x for x in threads if x.get('current')), threads[0])
 
                     event['exception'] = {
                         "values": [

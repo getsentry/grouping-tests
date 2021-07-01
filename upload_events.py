@@ -85,6 +85,43 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                 event.pop('project', None)
                 if 'exception' in event:
                     event.pop('threads', None)
+                elif (
+                    get_path(event, "logentry", "formatted") and
+                    get_path(event, "threads", "values") and
+                    get_path(event, "platform") == "cocoa"
+                ):
+                    # Deal with Cocoa 6 NSError events that are sent as
+                    # stacktrace + logentry
+                    # we assume all of those kinds of events are NSError which
+                    # is not really true, only most of the time
+                    message = event.pop("logentry")['formatted']
+
+                    threads = event.pop("threads")['values']
+                    thread = next((x for x in threads if x.get('current')), threads[0])
+
+                    event['exception'] = {
+                        "values": [
+                            {
+                                "type": message,
+                                "mechanism": {
+                                    "type": "NSError",
+                                    "value": "<converted from sentry-cocoa 6>",
+                                    "meta": {
+                                        "ns_error": {
+                                            # Not 100% correct, domain is a
+                                            # substring of message but it
+                                            # should group about the same as we
+                                            # always group by (domain, code)
+                                            "domain": message,
+                                            "code": 2,
+                                        }
+                                    }
+                                },
+                                "stacktrace": thread.get("stacktrace"),
+                            }
+                        ]
+                    }
+
                 event.pop('debug_meta', None)
 
                 for stacktrace_info in find_stacktraces_in_data(event):

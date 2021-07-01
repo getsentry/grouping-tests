@@ -83,7 +83,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
 
             for event in events2:
                 event.pop('project', None)
-                if 'exception' in event:
+                if get_path(event, 'exception', 'values', 0, 'stacktrace', 'frames'):
                     event.pop('threads', None)
                 elif (
                     get_path(event, "logentry", "formatted") and
@@ -131,7 +131,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                             frame["in_app"] = None if orig_in_app == -1 else bool(orig_in_app)
 
                 event_id = event.pop('event_id', None)
-                event.setdefault("extra", {})['orig_event_id'] = event_id
+                event['tags'] = {"orig_event_id": event_id}
                 event['event_id'] = event_id = str(uuid.uuid4().hex).replace("-", "")
 
                 envelope = Envelope(

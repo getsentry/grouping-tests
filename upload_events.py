@@ -80,8 +80,14 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
         with click.progressbar(events, length=num_events) as events2:
             last_sleep = time.time()
             event_count = 0
+            skip_count = 0
 
             for event in events2:
+
+                if skip_event(event):
+                    skip_count += 1
+                    continue
+
                 event.pop('project', None)
                 if 'exception' in event:
                     event.pop('threads', None)
@@ -160,6 +166,9 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
         for worker in workers:
             worker.join()
 
+        if skip_count:
+            print(f"Skipped {skip_count} event(s).")
+
         print(f"Done. Elapsed time is {time.time() - now} secs.")
 
 def _parse_lines(input_stream):
@@ -181,6 +190,16 @@ def worker_loop(dsn, queue):
 
     if client.transport._disabled_until:
         print(f"WARNING: Hit rate limits: {client.transport._disabled_until}")
+
+
+def skip_event(event: dict) -> bool:
+    """ Returns True if the event should not be uploaded """
+    fingerprint = event.get("fingerprint")
+    # We only want to skip fingerprints which do not include "{{ default }}"
+    if fingerprint and "{{ default }}" not in fingerprint:
+        return True
+
+    return False
 
 
 if __name__ == "__main__":

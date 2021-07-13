@@ -14,7 +14,7 @@ from threading import Thread
 from wipe_project import delete_groups
 from sentry.models import Project, ProjectKey
 from sentry.stacktraces.processing import find_stacktraces_in_data
-from sentry.utils.safe import get_path
+from sentry.utils.safe import get_path, set_path
 import sentry_sdk
 from sentry_sdk.utils import format_timestamp
 from sentry_sdk.envelope import Envelope
@@ -129,6 +129,16 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                     }
 
                 event.pop('debug_meta', None)
+
+                # make sure the event does not go through minidump processing,
+                # otherwise we get weird errors in the pipeline we have to
+                # ignore
+                exceptions = get_path(event, "exception", "values", filter=True)
+                if exceptions:
+                    mechanism = get_path(exceptions, 0, "mechanism", "type"):
+
+                    if mechanism:
+                        set_path(exceptions, 0, "mechanism", "type", value=f"{mechanism}_disabled")
 
                 for stacktrace_info in find_stacktraces_in_data(event):
                     for frame in get_path(stacktrace_info.stacktrace, "frames", filter=True, default=()) or ():

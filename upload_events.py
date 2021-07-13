@@ -89,7 +89,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                     continue
 
                 event.pop('project', None)
-                if 'exception' in event:
+                if get_path(event, 'exception', 'values', 0, 'stacktrace', 'frames'):
                     event.pop('threads', None)
                 elif (
                     get_path(event, "logentry", "formatted") and
@@ -127,6 +127,15 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                             }
                         ]
                     }
+                elif get_path(event, "platform") == "cocoa" and get_path(event, "exception", "values", 0, "mechanism", "meta", "ns_error") and not get_path(event, "exception", "values", 0, "stacktrace") and get_path(event, "threads", "values"):
+                    # Event the Cocoa 6 events are "crappy" because the
+                    # exception contains no stacktrace, instead the thread does
+                    #
+                    # TODO(markus): Relay should've normalized this
+                    threads = event.pop("threads")['values']
+                    thread = next((x for x in threads if x.get('current')), threads[0])
+                    if thread and thread.get("stacktrace"):
+                        event['exception']['values'][0]['stacktrace'] = thread["stacktrace"]
 
                 event.pop('debug_meta', None)
 
@@ -137,7 +146,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                             frame["in_app"] = None if orig_in_app == -1 else bool(orig_in_app)
 
                 event_id = event.pop('event_id', None)
-                event.setdefault("extra", {})['orig_event_id'] = event_id
+                event['tags'] = {"orig_event_id": event_id}
                 event['event_id'] = event_id = str(uuid.uuid4().hex).replace("-", "")
 
                 envelope = Envelope(

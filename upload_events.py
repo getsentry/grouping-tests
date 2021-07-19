@@ -138,6 +138,10 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                         event['exception']['values'][0]['stacktrace'] = thread["stacktrace"]
 
                 event.pop('debug_meta', None)
+                event.pop('_ref', None)
+                event.pop('_ref_version', None)
+                event.pop('location', None)
+                event.pop('title', None)
 
                 for stacktrace_info in find_stacktraces_in_data(event):
                     for frame in get_path(stacktrace_info.stacktrace, "frames", filter=True, default=()) or ():

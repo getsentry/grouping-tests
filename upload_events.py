@@ -138,6 +138,10 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                         event['exception']['values'][0]['stacktrace'] = thread["stacktrace"]
 
                 event.pop('debug_meta', None)
+                event.pop('_ref', None)
+                event.pop('_ref_version', None)
+                event.pop('location', None)
+                event.pop('title', None)
 
                 # make sure the event does not go through minidump processing,
                 # otherwise we get weird errors in the pipeline we have to

@@ -40,6 +40,12 @@ def delete_groups(project_id: int):
     groups = list(groups)
     print(f"Deleting {len(groups)} existing groups...")
 
+    from sentry.eventstream import backend
+    # Skip over all snuba replacements to avoid causing load
+    # Discover will be full of noise because we will not actually delete
+    # events, but that should be fine.
+    backend._send = lambda *a, **kw: None
+
     with click.progressbar(groups) as groups:
         for group in groups:
             delete_group(group)

@@ -148,7 +148,7 @@ def upload_events(file_name: Path, dsn: str, project_id: int, project_slug: str,
                 # ignore
                 exceptions = get_path(event, "exception", "values", filter=True)
                 if exceptions:
-                    mechanism = get_path(exceptions, 0, "mechanism", "type"):
+                    mechanism = get_path(exceptions, 0, "mechanism", "type")
 
                     if mechanism:
                         set_path(exceptions, 0, "mechanism", "type", value=f"{mechanism}_disabled")

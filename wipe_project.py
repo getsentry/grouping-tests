@@ -33,14 +33,26 @@ def main( project_id: int, project_slug: str, org_slug: str):
     print(f"Done. Elapsed time is {time.time() - now} secs.")
 
 
+from contextlib import contextmanager
+
+
+@contextmanager
+def TaskRunner():
+    from celery import current_app
+    from django.conf import settings
+    settings.CELERY_ALWAYS_EAGER = True
+    current_app.conf.CELERY_ALWAYS_EAGER = True
+    yield
+    current_app.conf.CELERY_ALWAYS_EAGER = False
+    settings.CELERY_ALWAYS_EAGER = False
+
+
 def delete_groups(project_id: int):
     groups = (Group.objects.filter(project_id=project_id).
               exclude(status__in=[GroupStatus.PENDING_DELETION, GroupStatus.DELETION_IN_PROGRESS]))
 
     groups = list(groups)
     print(f"Deleting {len(groups)} existing groups...")
-
-    from sentry.testutils.helpers.task_runner import TaskRunner
 
     from sentry.eventstream import backend
     # Skip over all snuba replacements to avoid causing load
